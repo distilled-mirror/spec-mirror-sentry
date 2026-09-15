@@ -3577,7 +3577,8 @@
                   "onlyPrebuilt",
                   "owned",
                   "shared",
-                  "showHidden"
+                  "showHidden",
+                  "showUserHidden"
                 ]
               }
             },
@@ -3913,6 +3914,9 @@
                       "isFavorited": {
                         "type": "boolean"
                       },
+                      "isHidden": {
+                        "type": "boolean"
+                      },
                       "projects": {
                         "type": "array",
                         "items": {
@@ -3931,6 +3935,7 @@
                       "filters",
                       "id",
                       "isFavorited",
+                      "isHidden",
                       "lastVisited",
                       "permissions",
                       "prebuiltId",
@@ -3998,6 +4003,7 @@
                           "teamsWithEditAccess": []
                         },
                         "isFavorited": false,
+                        "isHidden": false,
                         "prebuiltId": null
                       },
                       {
@@ -4049,6 +4055,7 @@
                         "widgetPreview": [],
                         "permissions": null,
                         "isFavorited": false,
+                        "isHidden": false,
                         "prebuiltId": null
                       }
                     ],
@@ -11912,6 +11919,10 @@
                               "type"
                             ]
                           }
+                        },
+                        "estimatedIngestionDelaySeconds": {
+                          "type": "number",
+                          "format": "double"
                         }
                       },
                       "required": [
@@ -14596,6 +14607,136 @@
             "description": "Not Found"
           }
         }
+      }
+    },
+    "/api/0/organizations/{organization_id_or_slug}/integrations/{integration_id}/repos/": {
+      "get": {
+        "operationId": "listOrganizationIntegrationRepositories",
+        "description": "**Experimental:** This API is under active development and may change.\n\nGet the list of repositories available in an integration\n````````````````````````````````````````````````````````\n\nGets all repositories that an integration makes available,\nand indicates whether or not you can search repositories\nby name.\n\n:qparam string search: Name fragment to search repositories by.\n:qparam bool installableOnly: If true, return only repositories that can be installed.\n                              If false or not provided, return all repositories.\n:qparam bool accessibleOnly: If true, only return repositories that the integration\n                             installation has access to, filtering locally instead of\n                             using the provider's search API which may return results\n                             beyond the installation's scope.",
+        "summary": "List Repositories Available to an Integration",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "organization_id_or_slug",
+            "schema": {
+              "type": "string"
+            },
+            "description": "The ID or slug of the organization the resource belongs to.",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "integration_id",
+            "schema": {
+              "type": "string"
+            },
+            "description": "The ID of the integration installed on the organization.",
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "search",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Repository name to search for."
+          },
+          {
+            "in": "query",
+            "name": "installableOnly",
+            "schema": {
+              "type": "boolean"
+            },
+            "description": "Only return repositories that are not already installed in Sentry."
+          },
+          {
+            "in": "query",
+            "name": "accessibleOnly",
+            "schema": {
+              "type": "boolean"
+            },
+            "description": "Only search repositories accessible to the integration installation."
+          }
+        ],
+        "tags": [
+          "Integration"
+        ],
+        "security": [
+          {
+            "auth_token": [
+              "org:admin",
+              "org:integrations",
+              "org:read",
+              "org:write"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "repos": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "identifier": {
+                            "type": "string"
+                          },
+                          "isInstalled": {
+                            "type": "boolean"
+                          },
+                          "defaultBranch": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "externalId": {
+                            "type": "string"
+                          },
+                          "url": {
+                            "type": "string",
+                            "nullable": true
+                          }
+                        },
+                        "required": [
+                          "defaultBranch",
+                          "externalId",
+                          "identifier",
+                          "isInstalled",
+                          "name",
+                          "url"
+                        ]
+                      }
+                    },
+                    "searchable": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "repos"
+                  ]
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        },
+        "x-sentry-experimental": true
       }
     },
     "/api/0/organizations/{organization_id_or_slug}/issues/": {
@@ -29913,11 +30054,7 @@
             "schema": {
               "type": "string",
               "enum": [
-                "crash_free_sessions",
-                "crash_free_users",
-                "date",
-                "sessions",
-                "users"
+                "date"
               ]
             },
             "description": "The field used to sort results by. By default, this is `date`."
@@ -33426,16 +33563,27 @@
           },
           {
             "in": "query",
-            "name": "data_source",
+            "name": "query",
             "schema": {
               "type": "string",
+              "minLength": 1
+            },
+            "description": "Filters results by using [query syntax](/product/sentry-basics/search/).\n\nExample: `query=(transaction:foo AND release:abc) OR (transaction:[bar,baz] AND release:def)`\n",
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "data_source",
+            "schema": {
               "enum": [
                 "events",
                 "search_issues",
                 "spans"
-              ]
+              ],
+              "type": "string",
+              "minLength": 1
             },
-            "description": "The data source to query replays from.",
+            "description": "The data source to query replays from.\n\n* `events`\n* `search_issues`\n* `spans`",
             "required": true
           },
           {
@@ -33506,17 +33654,10 @@
           },
           {
             "in": "query",
-            "name": "query",
-            "schema": {
-              "type": "string"
-            },
-            "description": "Filters results by using [query syntax](/product/sentry-basics/search/).\n\nExample: `query=(transaction:foo AND release:abc) OR (transaction:[bar,baz] AND release:def)`\n"
-          },
-          {
-            "in": "query",
             "name": "returnIds",
             "schema": {
-              "type": "boolean"
+              "type": "boolean",
+              "default": false
             },
             "description": "If true, return issue IDs rather than counts."
           }
@@ -37171,6 +37312,167 @@
             "description": "Not Found"
           }
         }
+      }
+    },
+    "/api/0/organizations/{organization_id_or_slug}/sentry-app-components/": {
+      "get": {
+        "operationId": "listOrganizationSentryAppComponents",
+        "description": "**Experimental:** This API is under active development and may change.\n\nRetrieve prepared UI components for installed custom integrations, including issue-link forms.",
+        "summary": "List an Organization's Installed Sentry App Components",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "organization_id_or_slug",
+            "schema": {
+              "type": "string"
+            },
+            "description": "The ID or slug of the organization the resource belongs to.",
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "description": "A pointer to the last object fetched and its sort order; used to retrieve the next or previous results.",
+            "x-learn-more": "https://docs.sentry.io/api/pagination/"
+          },
+          {
+            "in": "query",
+            "name": "filter",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Filter components by type, such as `issue-link`."
+          }
+        ],
+        "tags": [
+          "Integration"
+        ],
+        "security": [
+          {
+            "auth_token": [
+              "org:admin",
+              "org:read",
+              "org:write"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "uuid": {
+                        "type": "string"
+                      },
+                      "type": {
+                        "type": "string"
+                      },
+                      "schema": {
+                        "type": "object",
+                        "additionalProperties": {}
+                      },
+                      "error": {
+                        "anyOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "detail": {
+                                "type": "string"
+                              },
+                              "context": {
+                                "type": "object",
+                                "additionalProperties": {}
+                              }
+                            }
+                          }
+                        ]
+                      },
+                      "sentryApp": {
+                        "type": "object",
+                        "properties": {
+                          "uuid": {
+                            "type": "string"
+                          },
+                          "slug": {
+                            "type": "string"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "avatars": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "avatarType": {
+                                  "type": "string"
+                                },
+                                "avatarUuid": {
+                                  "type": "string"
+                                },
+                                "avatarUrl": {
+                                  "type": "string"
+                                },
+                                "color": {
+                                  "type": "boolean"
+                                },
+                                "photoType": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "avatarType",
+                                "avatarUrl",
+                                "avatarUuid",
+                                "color",
+                                "photoType"
+                              ]
+                            }
+                          }
+                        },
+                        "required": [
+                          "avatars",
+                          "name",
+                          "slug",
+                          "uuid"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "error",
+                      "schema",
+                      "sentryApp",
+                      "type",
+                      "uuid"
+                    ]
+                  }
+                }
+              }
+            },
+            "description": ""
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        },
+        "x-sentry-experimental": true
       }
     },
     "/api/0/organizations/{organization_id_or_slug}/sentry-apps/": {
@@ -43542,7 +43844,7 @@
                         "logic_type"
                       ]
                     },
-                    "description": "The filters to run before the action will fire and the action(s) to fire.\n\n        `logicType` can be one of `any-short`, `all`, or `none`.\n\n        Below is a basic example. See below for all other options.\n\n        ```json\n            \"actionFilters\": [\n                {\n                    \"logicType\": \"any\",\n                    \"conditions\": [\n                        {\n                            \"type\": \"level\",\n                            \"comparison\": {\n                                \"level\": 50,\n                                \"match\": \"eq\"\n                            },\n                            \"conditionResult\": true\n                        }\n                    ],\n                    \"actions\": [\n                        {\n                            \"id\": \"123\",\n                            \"type\": \"email\",\n                            \"integrationId\": null,\n                            \"data\": {},\n                            \"config\": {\n                                \"targetType\": \"user\",\n                                \"targetDisplay\": null,\n                                \"targetIdentifier\": \"56789\"\n                            },\n                            \"status\": \"active\"\n                        }\n                    ]\n                }\n            ]\n        ```\n\n        ## Conditions\n\n        **Issue Age**\n        - `time`: One of `minute`, `hour`, `day`, or `week`.\n        - `value`: A positive integer.\n        - `comparisonType`: One of `older` or `newer`.\n        ```json\n            {\n                \"type\": \"age_comparison\",\n                \"comparison\": {\n                    \"time\": \"minute\",\n                    \"value\": 10,\n                    \"comparisonType\": \"older\"\n                },\n                \"conditionResult\": true\n            }\n\n        ```\n\n        **Issue Assignment**\n        - `targetType`: Who the issue is assigned to\n            - `Unassigned`: Unassigned\n            - `Member`: Assigned to a user\n            - `Team`: Assigned to a team\n        - `targetIdentifier`: The ID of the user or team from the `targetType`. Enter \"\" if `targetType` is `Unassigned`.\n        ```json\n            {\n                \"type\": \"assigned_to\",\n                \"comparison\": {\n                    \"targetType\": \"Member\",\n                    \"targetIdentifier\": 123456\n                },\n                \"conditionResult\": true\n            }\n        ```\n\n        **Issue Category**\n        - `value`: The issue category to filter to.\n            - `1`: Error issues\n            - `6`: Feedback issues\n            - `10`: Outage issues\n            - `11`: Metric issues\n            - `12`: DB Query issues\n            - `13`: HTTP Client issues\n            - `14`: Front end issues\n            - `15`: Mobile issues\n            - `17`: Preprod issues\n            - `19`: Configuration issues\n        ```json\n            {\n                \"type\": \"issue_category\",\n                \"comparison\": {\n                    \"value\": 1\n                },\n                \"conditionResult\": true\n            }\n        ```\n\n        **Issue Frequency**\n        - `value`: A positive integer representing how many times the issue has to happen before the alert will fire.\n        ```json\n            {\n                \"type\": \"issue_occurrences\",\n                \"comparison\": {\n                    \"value\": 10\n                },\n                \"conditionResult\": true\n            }\n        ```\n\n        **De-escalation**\n        ```json\n            {\n                \"type\": \"issue_priority_deescalating\",\n                \"comparison\": true,\n                \"conditionResult\": true\n            }\n        ```\n\n        **Issue Priority**\n        - `comparison`: The priority the issue must be for the alert to fire.\n            - `75`: High priority\n            - `50`: Medium priority\n            - `25`: Low priority\n        ```json\n            {\n                \"type\": \"issue_priority_greater_or_equal\",\n                \"comparison\": 75,\n                \"conditionResult\": true\n            }\n        ```\n\n        **Number of Users Affected**\n        - `value`: A positive integer representing the number of users that must be affected before the alert will fire.\n        - `filters`: A list of additional sub-filters to evaluate before the alert will fire.\n        - `interval`: The time period in which to evaluate the value. e.g. Number of users affected by an issue is more than `value` in `interval`.\n            - `1min`: 1 minute\n            - `5min`: 5 minutes\n            - `15min`: 15 minutes\n            - `1hr`: 1 hour\n            - `1d`: 1 day\n            - `1w`: 1 week\n            - `30d`: 30 days\n        ```json\n            {\n                \"type\": \"event_unique_user_frequency_count\",\n                \"comparison\": {\n                    \"value\": 100,\n                    \"filters\": [{\"key\": \"foo\", \"match\": \"eq\", \"value\": \"bar\"}],\n                    \"interval\": \"1h\"\n                },\n                \"conditionResult\": true\n            }\n        ```\n\n        **Number of Events**\n        - `value`: A positive integer representing the number of events in an issue that must come in before the alert will fire\n        - `interval`: The time period in which to evaluate the value. e.g. Number of events in an issue is more than `value` in `interval`.\n            - `1min`: 1 minute\n            - `5min`: 5 minutes\n            - `15min`: 15 minutes\n            - `1hr`: 1 hour\n            - `1d`: 1 day\n            - `1w`: 1 week\n            - `30d`: 30 days\n        ```json\n            {\n                \"type\": \"event_frequency_count\",\n                \"comparison\": {\n                    \"value\": 100,\n                    \"interval\": \"1h\"\n                },\n                \"conditionResult\": true\n            }\n        ```\n\n        **Percent of Events**\n        - `value`: A positive integer representing the number of events in an issue that must come in before the alert will fire\n        - `interval`: The time period in which to evaluate the value. e.g. Number of events in an issue is `comparisonInterval` percent higher `value` compared to `interval`.\n            - `1min`: 1 minute\n            - `5min`: 5 minutes\n            - `15min`: 15 minutes\n            - `1hr`: 1 hour\n            - `1d`: 1 day\n            - `1w`: 1 week\n            - `30d`: 30 days\n        - `comparisonInterval`: The time period to compare against. See `interval` for options.\n        ```json\n            {\n                \"type\": \"event_frequency_percent\",\n                \"comparison\": {\n                    \"value\": 100,\n                    \"interval\": \"1h\",\n                    \"comparisonInterval\": \"1w\"\n                },\n                \"conditionResult\": true\n            }\n\n        ```\n\n        **Percentage of Sessions Affected Count**\n        - `value`: A positive integer representing the number of events in an issue that must come in before the alert will fire\n        - `interval`: The time period in which to evaluate the value. e.g. Percentage of sessions affected by an issue is more than `value` in `interval`.\n            - `1min`: 1 minute\n            - `5min`: 5 minutes\n            - `15min`: 15 minutes\n            - `1hr`: 1 hour\n            - `1d`: 1 day\n            - `1w`: 1 week\n            - `30d`: 30 days\n        ```json\n            {\n                \"type\": \"percent_sessions_count\",\n                \"comparison\": {\n                    \"value\": 10,\n                    \"interval\": \"1h\"\n                },\n                \"conditionResult\": true\n            }\n        ```\n\n        **Percentage of Sessions Affected Percent**\n        - `value`: A positive integer representing the number of events in an issue that must come in before the alert will fire\n        - `interval`: The time period in which to evaluate the value. e.g. Percentage of sessions affected by an issue is `comparisonInterval` percent higher `value` compared to `interval`.\n            - `1min`: 1 minute\n            - `5min`: 5 minutes\n            - `15min`: 15 minutes\n            - `1hr`: 1 hour\n            - `1d`: 1 day\n            - `1w`: 1 week\n            - `30d`: 30 days\n        - `comparisonInterval`: The time period to compare against. See `interval` for options.\n        ```json\n            {\n                \"type\": \"percent_sessions_percent\",\n                \"comparison\": {\n                    \"value\": 10,\n                    \"interval\": \"1h\"\n                },\n                \"conditionResult\": true\n            }\n        ```\n\n        **Event Attribute**\n        The event's `attribute` value `match` `value`\n\n        - `attribute`: The event attribute to match on. Valid values are: `message`, `platform`, `environment`, `type`, `error.handled`, `error.unhandled`, `error.main_thread`, `exception.type`, `exception.value`, `user.id`, `user.email`, `user.username`, `user.ip_address`, `http.method`, `http.url`, `http.status_code`, `sdk.name`, `stacktrace.code`, `stacktrace.module`, `stacktrace.filename`, `stacktrace.abs_path`, `stacktrace.package`, `unreal.crash_type`, `app.in_foreground`.\n        - `match`: The comparison operator\n            - `co`: Contains\n            - `nc`: Does not contain\n            - `eq`: Equals\n            - `ne`: Does not equal\n            - `sw`: Starts with\n            - `ew`: Ends with\n            - `is`: Is set\n            - `ns`: Is not set\n        - `value`: A string. Not required when match is `is` or `ns`.\n\n        ```json\n            {\n                \"type\": \"event_attribute\",\n                \"comparison\": {\n                    \"match\": \"co\",\n                    \"value\": \"bar\",\n                    \"attribute\": \"message\"\n                },\n                \"conditionResult\": true\n            }\n        ```\n\n        **Tagged Event**\n        The event's tags `key` match `value`\n        - `key`: The tag value\n        - `match`: The comparison operator\n            - `co`: Contains\n            - `nc`: Does not contain\n            - `eq`: Equals\n            - `ne`: Does not equal\n            - `sw`: Starts with\n            - `ew`: Ends with\n            - `is`: Is set\n            - `ns`: Is not set\n        - `value`: A string. Not required when match is `is` or `ns`.\n\n        ```json\n            {\n                \"type\": \"tagged_event\",\n                \"comparison\": {\n                    \"key\": \"level\",\n                    \"match\": \"eq\",\n                    \"value\": \"error\"\n                },\n                \"conditionResult\": true\n            }\n        ```\n\n        **Latest Release**\n        The event is from the latest release\n\n        ```json\n            {\n                \"type\": \"latest_release\",\n                \"comparison\": true,\n                \"conditionResult\": true\n            }\n        ```\n\n        **Release Age**\n        ```json\n            {\n                \"type\": \"latest_adopted_release\",\n                \"comparison\": {\n                    \"environment\": \"production\",\n                    \"ageComparison\": \"older\",\n                    \"releaseAgeType\": \"oldest\"\n                },\n                \"conditionResult\": true\n            }\n        ```\n\n        **Event Level**\n        The event's level is `match` `level`\n        - `match`: The comparison operator\n            - `eq`: Equal\n            - `gte`: Greater than or equal\n            - `lte`: Less than or equal\n        - `level`: The event level\n            - `50`: Fatal\n            - `40`: Error\n            - `30`: Warning\n            - `20`: Info\n            - `10`: Debug\n            - `0`: Sample\n\n        ```json\n            {\n                \"type\": \"level\",\n                \"comparison\": {\n                    \"level\": 50,\n                    \"match\": \"eq\"\n                },\n                \"conditionResult\": true\n            }\n        ```\n\n        ## Actions\n        A list of actions that take place when all required conditions and filters for the alert are met. See below for a list of possible actions.\n\n\n        **Notify on Preferred Channel**\n        - `data`: A dictionary with the fallthrough type option when choosing to notify Suggested Assignees. Leave empty if notifying a user or team.\n            - `fallthroughType`\n                - `ActiveMembers`\n                - `AllMembers`\n                - `NoOne`\n        - `config`: A dictionary with the configuration options for notification.\n            - `targetType`: The type of recipient to notify\n                - `user`: User\n                - `team`: Team\n                - `issue_owners`: Suggested Assignees\n            - `targetDisplay`: null\n            - `targetIdentifier`: The id of the user or team to notify. Leave null for Suggested Assignees.\n\n        ```json\n            {\n                \"type\":\"email\",\n                \"integrationId\":null,\n                \"data\":{},\n                \"config\":{\n                    \"targetType\":\"user\",\n                    \"targetDisplay\":null,\n                    \"targetIdentifier\":\"232692\"\n                },\n                \"status\":\"active\"\n            },\n            {\n                \"type\":\"email\",\n                \"integrationId\":null,\n                \"data\":{\n                    \"fallthroughType\":\"ActiveMembers\"\n                },\n                \"config\":{\n                    \"targetType\":\"issue_owners\",\n                    \"targetDisplay\":null,\n                    \"targetIdentifier\":\"\"}\n                ,\n                \"status\":\"active\"\n            }\n        ```\n        **Notify on Slack**\n        - `targetDisplay`: The name of the channel to notify in.\n        `integrationId`: The stringified ID of the integration.\n\n        ```json\n            {\n                \"type\":\"slack\",\n                \"config\":{\n                    \"targetType\":\"specific\",\n                    \"targetIdentifier\":\"\",\n                    \"targetDisplay\":\"notify-errors\"\n                },\n                \"integrationId\":\"1\",\n                \"data\":{},\n                \"status\":\"active\"\n            }\n        ```\n\n        **Notify on PagerDuty**\n        - `targetDisplay`: The name of the service to create the ticket in.\n        - `integrationId`: The stringified ID of the integration.\n        - `data[\"priority\"]`: The severity level for the notification.\n\n        ```json\n            {\n                \"type\":\"pagerduty\",\n                \"config\":{\n                    \"targetType\":\"specific\",\n                    \"targetIdentifier\":\"123456\",\n                    \"targetDisplay\":\"Error Service\"\n                    },\n                \"integrationId\":\"2345\",\n                \"data\":{\n                    \"priority\":\"default\"\n                },\n                \"status\":\"active\"\n            }\n        ```\n\n        **Notify on Discord**\n        - `targetDisplay`: The name of the service to create the ticket in.\n        - `integrationId`: The stringified ID of the integration.\n        - `data[\"tags\"]`: Comma separated list of tags to add to the notification.\n\n        ```json\n            {\n                \"type\":\"discord\",\n                \"config\":{\n                    \"targetType\":\"specific\",\n                    \"targetIdentifier\":\"12345\",\n                    \"targetDisplay\":\"\",\n                    },\n                \"integrationId\":\"1234\",\n                \"data\":{\n                    \"tags\":\"transaction,environment\"\n                },\n                \"status\":\"active\"\n            }\n        ```\n\n        **Notify on MSTeams**\n        - `targetIdentifier` - The integration ID associated with the Microsoft Teams team.\n        - `targetDisplay` - The name of the channel to send the notification to.\n        - `integrationId`: The stringified ID of the integration.\n        ```json\n            {\n                \"type\":\"msteams\",\n                \"config\":{\n                    \"targetType\":\"specific\",\n                    \"targetIdentifier\":\"19:a4b3kghaghgkjah357y6847@thread.skype\",\n                    \"targetDisplay\":\"notify-errors\"\n                },\n                \"integrationId\":\"1\",\n                \"data\":{},\n                \"status\":\"active\"\n            }\n        ```\n\n        **Notify on OpsGenie**\n        - `targetDisplay`: The name of the Opsgenie team.\n        - `targetIdentifier`: The ID of the Opsgenie team to send the notification to.\n        - `integrationId`: The stringified ID of the integration.\n        - `data[\"priority\"]`: The priority level for the notification.\n\n        ```json\n            {\n                \"type\":\"opsgenie\",\n                \"config\":{\n                    \"targetType\":\"specific\",\n                    \"targetIdentifier\":\"123456-Error-Service\",\n                    \"targetDisplay\":\"Error Service\"\n                    },\n                \"integrationId\":\"2345\",\n                \"data\":{\n                    \"priority\":\"P3\"\n                },\n                \"status\":\"active\"\n            }\n        ```\n\n        **Notify on Azure DevOps**\n        - `integrationId`: The stringified ID of the integration.\n        - `data` - A list of any fields you want to include in the ticket as objects.\n\n        ```json\n            {\n                \"type\":\"vsts\",\n                \"config\":{\n                    \"targetType\":\"specific\",\n                    \"targetIdentifier\":\",\n                    \"targetDisplay\":\"\"\n                    },\n                \"integrationId\":\"2345\",\n                \"data\":{...},\n                \"status\":\"active\"\n            }\n        ```\n\n        **Create a Jira ticket**\n        - `integrationId`: The stringified ID of the integration.\n        - `data` - A list of any fields you want to include in the ticket as objects.\n\n        ```json\n            {\n                \"type\":\"jira\",\n                \"config\":{\n                    \"targetType\":\"specific\",\n                    \"targetIdentifier\":\",\n                    \"targetDisplay\":\"\"\n                    },\n                \"integrationId\":\"2345\",\n                \"data\":{...},\n                \"status\":\"active\"\n            }\n        ```\n\n        **Create a Jira Server ticket**\n        - `integrationId`: The stringified ID of the integration.\n        - `data` - A list of any fields you want to include in the ticket as objects.\n\n        ```json\n            {\n                \"type\":\"jira_server\",\n                \"config\":{\n                    \"targetType\":\"specific\",\n                    \"targetIdentifier\":\",\n                    \"targetDisplay\":\"\"\n                    },\n                \"integrationId\":\"2345\",\n                \"data\":{...},\n                \"status\":\"active\"\n            }\n        ```\n\n        **Create a GitHub issue**\n        - `integrationId`: The stringified ID of the integration.\n        - `data` - A list of any fields you want to include in the ticket as objects.\n\n        ```json\n            {\n                \"type\":\"github\",\n                \"config\":{\n                    \"targetType\":\"specific\",\n                    \"targetIdentifier\":\",\n                    \"targetDisplay\":\"\"\n                    },\n                \"integrationId\":\"2345\",\n                \"data\":{\n                  \"additional_fields\": {\n                      \"assignee\": \"\",\n                      \"integration\": \"2345\",\n                      \"labels\": [],\n                      \"repo\": \"example-repo\",\n                  },\n                  \"dynamic_form_fields\": [\n                      {\n                        \"choices\": [[\"YourOrg/example-repo\", \"example-repo\"]],\n                        \"default\": \"YourOrg/example-repo\",\n                        \"label\": \"GitHub Repository\",\n                        \"name\": \"repo\",\n                        \"required\": true\n                        \"type\": \"select\",\n                        \"updatesForm\": true,\n                        \"url\": \"/extensions/github/search/example-repo/1234567/\",\n                      },\n                  ],\n                },\n                \"status\":\"active\"\n            }\n        ```\n        "
+                    "description": "The filters to run before the action will fire and the action(s) to fire.\n\n        `logicType` can be one of `any-short`, `all`, or `none`.\n\n        Below is a basic example. See below for all other options.\n\n        ```json\n            \"actionFilters\": [\n                {\n                    \"logicType\": \"any\",\n                    \"conditions\": [\n                        {\n                            \"type\": \"level\",\n                            \"comparison\": {\n                                \"level\": 50,\n                                \"match\": \"eq\"\n                            },\n                            \"conditionResult\": true\n                        }\n                    ],\n                    \"actions\": [\n                        {\n                            \"id\": \"123\",\n                            \"type\": \"email\",\n                            \"integrationId\": null,\n                            \"data\": {},\n                            \"config\": {\n                                \"targetType\": \"user\",\n                                \"targetDisplay\": null,\n                                \"targetIdentifier\": \"56789\"\n                            },\n                            \"status\": \"active\"\n                        }\n                    ]\n                }\n            ]\n        ```\n\n        ## Conditions\n\n        **Issue Age**\n        - `time`: One of `minute`, `hour`, `day`, or `week`.\n        - `value`: A positive integer.\n        - `comparisonType`: One of `older` or `newer`.\n        ```json\n            {\n                \"type\": \"age_comparison\",\n                \"comparison\": {\n                    \"time\": \"minute\",\n                    \"value\": 10,\n                    \"comparisonType\": \"older\"\n                },\n                \"conditionResult\": true\n            }\n\n        ```\n\n        **Issue Assignment**\n        - `targetType`: Who the issue is assigned to\n            - `Unassigned`: Unassigned\n            - `Member`: Assigned to a user\n            - `Team`: Assigned to a team\n        - `targetIdentifier`: The ID of the user or team from the `targetType`. Enter \"\" if `targetType` is `Unassigned`.\n        ```json\n            {\n                \"type\": \"assigned_to\",\n                \"comparison\": {\n                    \"targetType\": \"Member\",\n                    \"targetIdentifier\": 123456\n                },\n                \"conditionResult\": true\n            }\n        ```\n\n        **Issue Category**\n        - `value`: The issue category to filter to.\n            - `1`: Error issues\n            - `6`: Feedback issues\n            - `10`: Outage issues\n            - `11`: Metric issues\n            - `12`: DB Query issues\n            - `13`: HTTP Client issues\n            - `14`: Front end issues\n            - `15`: Mobile issues\n            - `17`: Preprod issues\n            - `19`: Configuration issues\n        ```json\n            {\n                \"type\": \"issue_category\",\n                \"comparison\": {\n                    \"value\": 1\n                },\n                \"conditionResult\": true\n            }\n        ```\n\n        **Issue Frequency**\n        - `value`: A positive integer representing how many times the issue has to happen before the alert will fire.\n        ```json\n            {\n                \"type\": \"issue_occurrences\",\n                \"comparison\": {\n                    \"value\": 10\n                },\n                \"conditionResult\": true\n            }\n        ```\n\n        **De-escalation**\n        - `comparison`: The priority threshold the issue must de-escalate below.\n            - `75`: High priority\n            - `50`: Medium priority\n            - `25`: Low priority\n        ```json\n            {\n                \"type\": \"issue_priority_deescalating\",\n                \"comparison\": 75,\n                \"conditionResult\": true\n            }\n        ```\n\n        **Issue Priority**\n        - `comparison`: The priority the issue must be for the alert to fire.\n            - `75`: High priority\n            - `50`: Medium priority\n            - `25`: Low priority\n        ```json\n            {\n                \"type\": \"issue_priority_greater_or_equal\",\n                \"comparison\": 75,\n                \"conditionResult\": true\n            }\n        ```\n\n        **Number of Users Affected**\n        - `value`: A positive integer representing the number of users that must be affected before the alert will fire.\n        - `filters`: A list of additional sub-filters to evaluate before the alert will fire.\n        - `interval`: The time period in which to evaluate the value. e.g. Number of users affected by an issue is more than `value` in `interval`.\n            - `1min`: 1 minute\n            - `5min`: 5 minutes\n            - `15min`: 15 minutes\n            - `1hr`: 1 hour\n            - `1d`: 1 day\n            - `1w`: 1 week\n            - `30d`: 30 days\n        ```json\n            {\n                \"type\": \"event_unique_user_frequency_count\",\n                \"comparison\": {\n                    \"value\": 100,\n                    \"filters\": [{\"key\": \"foo\", \"match\": \"eq\", \"value\": \"bar\"}],\n                    \"interval\": \"1h\"\n                },\n                \"conditionResult\": true\n            }\n        ```\n\n        **Number of Events**\n        - `value`: A positive integer representing the number of events in an issue that must come in before the alert will fire\n        - `interval`: The time period in which to evaluate the value. e.g. Number of events in an issue is more than `value` in `interval`.\n            - `1min`: 1 minute\n            - `5min`: 5 minutes\n            - `15min`: 15 minutes\n            - `1hr`: 1 hour\n            - `1d`: 1 day\n            - `1w`: 1 week\n            - `30d`: 30 days\n        ```json\n            {\n                \"type\": \"event_frequency_count\",\n                \"comparison\": {\n                    \"value\": 100,\n                    \"interval\": \"1h\"\n                },\n                \"conditionResult\": true\n            }\n        ```\n\n        **Percent of Events**\n        - `value`: A positive integer representing the number of events in an issue that must come in before the alert will fire\n        - `interval`: The time period in which to evaluate the value. e.g. Number of events in an issue is `comparisonInterval` percent higher `value` compared to `interval`.\n            - `1min`: 1 minute\n            - `5min`: 5 minutes\n            - `15min`: 15 minutes\n            - `1hr`: 1 hour\n            - `1d`: 1 day\n            - `1w`: 1 week\n            - `30d`: 30 days\n        - `comparisonInterval`: The time period to compare against. See `interval` for options.\n        ```json\n            {\n                \"type\": \"event_frequency_percent\",\n                \"comparison\": {\n                    \"value\": 100,\n                    \"interval\": \"1h\",\n                    \"comparisonInterval\": \"1w\"\n                },\n                \"conditionResult\": true\n            }\n\n        ```\n\n        **Percentage of Sessions Affected Count**\n        - `value`: A positive integer representing the number of events in an issue that must come in before the alert will fire\n        - `interval`: The time period in which to evaluate the value. e.g. Percentage of sessions affected by an issue is more than `value` in `interval`.\n            - `1min`: 1 minute\n            - `5min`: 5 minutes\n            - `15min`: 15 minutes\n            - `1hr`: 1 hour\n            - `1d`: 1 day\n            - `1w`: 1 week\n            - `30d`: 30 days\n        ```json\n            {\n                \"type\": \"percent_sessions_count\",\n                \"comparison\": {\n                    \"value\": 10,\n                    \"interval\": \"1h\"\n                },\n                \"conditionResult\": true\n            }\n        ```\n\n        **Percentage of Sessions Affected Percent**\n        - `value`: A positive integer representing the number of events in an issue that must come in before the alert will fire\n        - `interval`: The time period in which to evaluate the value. e.g. Percentage of sessions affected by an issue is `comparisonInterval` percent higher `value` compared to `interval`.\n            - `1min`: 1 minute\n            - `5min`: 5 minutes\n            - `15min`: 15 minutes\n            - `1hr`: 1 hour\n            - `1d`: 1 day\n            - `1w`: 1 week\n            - `30d`: 30 days\n        - `comparisonInterval`: The time period to compare against. See `interval` for options.\n        ```json\n            {\n                \"type\": \"percent_sessions_percent\",\n                \"comparison\": {\n                    \"value\": 10,\n                    \"interval\": \"1h\"\n                },\n                \"conditionResult\": true\n            }\n        ```\n\n        **Event Attribute**\n        The event's `attribute` value `match` `value`\n\n        - `attribute`: The event attribute to match on. Valid values are: `message`, `platform`, `environment`, `type`, `error.handled`, `error.unhandled`, `error.main_thread`, `exception.type`, `exception.value`, `user.id`, `user.email`, `user.username`, `user.ip_address`, `http.method`, `http.url`, `http.status_code`, `sdk.name`, `stacktrace.code`, `stacktrace.module`, `stacktrace.filename`, `stacktrace.abs_path`, `stacktrace.package`, `unreal.crash_type`, `app.in_foreground`.\n        - `match`: The comparison operator\n            - `co`: Contains\n            - `nc`: Does not contain\n            - `eq`: Equals\n            - `ne`: Does not equal\n            - `sw`: Starts with\n            - `ew`: Ends with\n            - `is`: Is set\n            - `ns`: Is not set\n        - `value`: A string. Not required when match is `is` or `ns`.\n\n        ```json\n            {\n                \"type\": \"event_attribute\",\n                \"comparison\": {\n                    \"match\": \"co\",\n                    \"value\": \"bar\",\n                    \"attribute\": \"message\"\n                },\n                \"conditionResult\": true\n            }\n        ```\n\n        **Tagged Event**\n        The event's tags `key` match `value`\n        - `key`: The tag value\n        - `match`: The comparison operator\n            - `co`: Contains\n            - `nc`: Does not contain\n            - `eq`: Equals\n            - `ne`: Does not equal\n            - `sw`: Starts with\n            - `ew`: Ends with\n            - `is`: Is set\n            - `ns`: Is not set\n        - `value`: A string. Not required when match is `is` or `ns`.\n\n        ```json\n            {\n                \"type\": \"tagged_event\",\n                \"comparison\": {\n                    \"key\": \"level\",\n                    \"match\": \"eq\",\n                    \"value\": \"error\"\n                },\n                \"conditionResult\": true\n            }\n        ```\n\n        **Latest Release**\n        The event is from the latest release\n\n        ```json\n            {\n                \"type\": \"latest_release\",\n                \"comparison\": true,\n                \"conditionResult\": true\n            }\n        ```\n\n        **Release Age**\n        ```json\n            {\n                \"type\": \"latest_adopted_release\",\n                \"comparison\": {\n                    \"environment\": \"production\",\n                    \"ageComparison\": \"older\",\n                    \"releaseAgeType\": \"oldest\"\n                },\n                \"conditionResult\": true\n            }\n        ```\n\n        **Event Level**\n        The event's level is `match` `level`\n        - `match`: The comparison operator\n            - `eq`: Equal\n            - `gte`: Greater than or equal\n            - `lte`: Less than or equal\n        - `level`: The event level\n            - `50`: Fatal\n            - `40`: Error\n            - `30`: Warning\n            - `20`: Info\n            - `10`: Debug\n            - `0`: Sample\n\n        ```json\n            {\n                \"type\": \"level\",\n                \"comparison\": {\n                    \"level\": 50,\n                    \"match\": \"eq\"\n                },\n                \"conditionResult\": true\n            }\n        ```\n\n        ## Actions\n        A list of actions that take place when all required conditions and filters for the alert are met. See below for a list of possible actions.\n\n\n        **Notify on Preferred Channel**\n        - `data`: A dictionary with the fallthrough type option when choosing to notify Suggested Assignees. Leave empty if notifying a user or team.\n            - `fallthroughType`\n                - `ActiveMembers`\n                - `AllMembers`\n                - `NoOne`\n        - `config`: A dictionary with the configuration options for notification.\n            - `targetType`: The type of recipient to notify\n                - `user`: User\n                - `team`: Team\n                - `issue_owners`: Suggested Assignees\n            - `targetDisplay`: null\n            - `targetIdentifier`: The id of the user or team to notify. Leave null for Suggested Assignees.\n\n        ```json\n            {\n                \"type\":\"email\",\n                \"integrationId\":null,\n                \"data\":{},\n                \"config\":{\n                    \"targetType\":\"user\",\n                    \"targetDisplay\":null,\n                    \"targetIdentifier\":\"232692\"\n                },\n                \"status\":\"active\"\n            },\n            {\n                \"type\":\"email\",\n                \"integrationId\":null,\n                \"data\":{\n                    \"fallthroughType\":\"ActiveMembers\"\n                },\n                \"config\":{\n                    \"targetType\":\"issue_owners\",\n                    \"targetDisplay\":null,\n                    \"targetIdentifier\":\"\"}\n                ,\n                \"status\":\"active\"\n            }\n        ```\n        **Notify on Slack**\n        - `targetDisplay`: The name of the channel to notify in.\n        `integrationId`: The stringified ID of the integration.\n\n        ```json\n            {\n                \"type\":\"slack\",\n                \"config\":{\n                    \"targetType\":\"specific\",\n                    \"targetIdentifier\":\"\",\n                    \"targetDisplay\":\"notify-errors\"\n                },\n                \"integrationId\":\"1\",\n                \"data\":{},\n                \"status\":\"active\"\n            }\n        ```\n\n        **Notify on PagerDuty**\n        - `targetDisplay`: The name of the service to create the ticket in.\n        - `integrationId`: The stringified ID of the integration.\n        - `data[\"priority\"]`: The severity level for the notification.\n\n        ```json\n            {\n                \"type\":\"pagerduty\",\n                \"config\":{\n                    \"targetType\":\"specific\",\n                    \"targetIdentifier\":\"123456\",\n                    \"targetDisplay\":\"Error Service\"\n                    },\n                \"integrationId\":\"2345\",\n                \"data\":{\n                    \"priority\":\"default\"\n                },\n                \"status\":\"active\"\n            }\n        ```\n\n        **Notify on Discord**\n        - `targetDisplay`: The name of the service to create the ticket in.\n        - `integrationId`: The stringified ID of the integration.\n        - `data[\"tags\"]`: Comma separated list of tags to add to the notification.\n\n        ```json\n            {\n                \"type\":\"discord\",\n                \"config\":{\n                    \"targetType\":\"specific\",\n                    \"targetIdentifier\":\"12345\",\n                    \"targetDisplay\":\"\",\n                    },\n                \"integrationId\":\"1234\",\n                \"data\":{\n                    \"tags\":\"transaction,environment\"\n                },\n                \"status\":\"active\"\n            }\n        ```\n\n        **Notify on MSTeams**\n        - `targetIdentifier` - The integration ID associated with the Microsoft Teams team.\n        - `targetDisplay` - The name of the channel to send the notification to.\n        - `integrationId`: The stringified ID of the integration.\n        ```json\n            {\n                \"type\":\"msteams\",\n                \"config\":{\n                    \"targetType\":\"specific\",\n                    \"targetIdentifier\":\"19:a4b3kghaghgkjah357y6847@thread.skype\",\n                    \"targetDisplay\":\"notify-errors\"\n                },\n                \"integrationId\":\"1\",\n                \"data\":{},\n                \"status\":\"active\"\n            }\n        ```\n\n        **Notify on OpsGenie**\n        - `targetDisplay`: The name of the Opsgenie team.\n        - `targetIdentifier`: The ID of the Opsgenie team to send the notification to.\n        - `integrationId`: The stringified ID of the integration.\n        - `data[\"priority\"]`: The priority level for the notification.\n\n        ```json\n            {\n                \"type\":\"opsgenie\",\n                \"config\":{\n                    \"targetType\":\"specific\",\n                    \"targetIdentifier\":\"123456-Error-Service\",\n                    \"targetDisplay\":\"Error Service\"\n                    },\n                \"integrationId\":\"2345\",\n                \"data\":{\n                    \"priority\":\"P3\"\n                },\n                \"status\":\"active\"\n            }\n        ```\n\n        **Notify on Azure DevOps**\n        - `integrationId`: The stringified ID of the integration.\n        - `data` - A list of any fields you want to include in the ticket as objects.\n\n        ```json\n            {\n                \"type\":\"vsts\",\n                \"config\":{\n                    \"targetType\":\"specific\",\n                    \"targetIdentifier\":\",\n                    \"targetDisplay\":\"\"\n                    },\n                \"integrationId\":\"2345\",\n                \"data\":{...},\n                \"status\":\"active\"\n            }\n        ```\n\n        **Create a Jira ticket**\n        - `integrationId`: The stringified ID of the integration.\n        - `data` - A list of any fields you want to include in the ticket as objects.\n\n        ```json\n            {\n                \"type\":\"jira\",\n                \"config\":{\n                    \"targetType\":\"specific\",\n                    \"targetIdentifier\":\",\n                    \"targetDisplay\":\"\"\n                    },\n                \"integrationId\":\"2345\",\n                \"data\":{...},\n                \"status\":\"active\"\n            }\n        ```\n\n        **Create a Jira Server ticket**\n        - `integrationId`: The stringified ID of the integration.\n        - `data` - A list of any fields you want to include in the ticket as objects.\n\n        ```json\n            {\n                \"type\":\"jira_server\",\n                \"config\":{\n                    \"targetType\":\"specific\",\n                    \"targetIdentifier\":\",\n                    \"targetDisplay\":\"\"\n                    },\n                \"integrationId\":\"2345\",\n                \"data\":{...},\n                \"status\":\"active\"\n            }\n        ```\n\n        **Create a GitHub issue**\n        - `integrationId`: The stringified ID of the integration.\n        - `data` - A list of any fields you want to include in the ticket as objects.\n\n        ```json\n            {\n                \"type\":\"github\",\n                \"config\":{\n                    \"targetType\":\"specific\",\n                    \"targetIdentifier\":\",\n                    \"targetDisplay\":\"\"\n                    },\n                \"integrationId\":\"2345\",\n                \"data\":{\n                  \"additional_fields\": {\n                      \"assignee\": \"\",\n                      \"integration\": \"2345\",\n                      \"labels\": [],\n                      \"repo\": \"example-repo\",\n                  },\n                  \"dynamic_form_fields\": [\n                      {\n                        \"choices\": [[\"YourOrg/example-repo\", \"example-repo\"]],\n                        \"default\": \"YourOrg/example-repo\",\n                        \"label\": \"GitHub Repository\",\n                        \"name\": \"repo\",\n                        \"required\": true\n                        \"type\": \"select\",\n                        \"updatesForm\": true,\n                        \"url\": \"/extensions/github/search/example-repo/1234567/\",\n                      },\n                  ],\n                },\n                \"status\":\"active\"\n            }\n        ```\n        "
                   },
                   "owner": {
                     "type": "string",
@@ -44934,7 +45236,7 @@
                             {
                               "id": "234567",
                               "type": "issue_priority_deescalating",
-                              "comparison": true,
+                              "comparison": 75,
                               "conditionResult": true
                             }
                           ],
@@ -45118,7 +45420,7 @@
                         "logic_type"
                       ]
                     },
-                    "description": "The filters to run before the action will fire and the action(s) to fire.\n\n        `logicType` can be one of `any-short`, `all`, or `none`.\n\n        Below is a basic example. See below for all other options.\n\n        ```json\n            \"actionFilters\": [\n                {\n                    \"logicType\": \"any\",\n                    \"conditions\": [\n                        {\n                            \"type\": \"level\",\n                            \"comparison\": {\n                                \"level\": 50,\n                                \"match\": \"eq\"\n                            },\n                            \"conditionResult\": true\n                        }\n                    ],\n                    \"actions\": [\n                        {\n                            \"id\": \"123\",\n                            \"type\": \"email\",\n                            \"integrationId\": null,\n                            \"data\": {},\n                            \"config\": {\n                                \"targetType\": \"user\",\n                                \"targetDisplay\": null,\n                                \"targetIdentifier\": \"56789\"\n                            },\n                            \"status\": \"active\"\n                        }\n                    ]\n                }\n            ]\n        ```\n\n        ## Conditions\n\n        **Issue Age**\n        - `time`: One of `minute`, `hour`, `day`, or `week`.\n        - `value`: A positive integer.\n        - `comparisonType`: One of `older` or `newer`.\n        ```json\n            {\n                \"type\": \"age_comparison\",\n                \"comparison\": {\n                    \"time\": \"minute\",\n                    \"value\": 10,\n                    \"comparisonType\": \"older\"\n                },\n                \"conditionResult\": true\n            }\n\n        ```\n\n        **Issue Assignment**\n        - `targetType`: Who the issue is assigned to\n            - `Unassigned`: Unassigned\n            - `Member`: Assigned to a user\n            - `Team`: Assigned to a team\n        - `targetIdentifier`: The ID of the user or team from the `targetType`. Enter \"\" if `targetType` is `Unassigned`.\n        ```json\n            {\n                \"type\": \"assigned_to\",\n                \"comparison\": {\n                    \"targetType\": \"Member\",\n                    \"targetIdentifier\": 123456\n                },\n                \"conditionResult\": true\n            }\n        ```\n\n        **Issue Category**\n        - `value`: The issue category to filter to.\n            - `1`: Error issues\n            - `6`: Feedback issues\n            - `10`: Outage issues\n            - `11`: Metric issues\n            - `12`: DB Query issues\n            - `13`: HTTP Client issues\n            - `14`: Front end issues\n            - `15`: Mobile issues\n            - `17`: Preprod issues\n            - `19`: Configuration issues\n        ```json\n            {\n                \"type\": \"issue_category\",\n                \"comparison\": {\n                    \"value\": 1\n                },\n                \"conditionResult\": true\n            }\n        ```\n\n        **Issue Frequency**\n        - `value`: A positive integer representing how many times the issue has to happen before the alert will fire.\n        ```json\n            {\n                \"type\": \"issue_occurrences\",\n                \"comparison\": {\n                    \"value\": 10\n                },\n                \"conditionResult\": true\n            }\n        ```\n\n        **De-escalation**\n        ```json\n            {\n                \"type\": \"issue_priority_deescalating\",\n                \"comparison\": true,\n                \"conditionResult\": true\n            }\n        ```\n\n        **Issue Priority**\n        - `comparison`: The priority the issue must be for the alert to fire.\n            - `75`: High priority\n            - `50`: Medium priority\n            - `25`: Low priority\n        ```json\n            {\n                \"type\": \"issue_priority_greater_or_equal\",\n                \"comparison\": 75,\n                \"conditionResult\": true\n            }\n        ```\n\n        **Number of Users Affected**\n        - `value`: A positive integer representing the number of users that must be affected before the alert will fire.\n        - `filters`: A list of additional sub-filters to evaluate before the alert will fire.\n        - `interval`: The time period in which to evaluate the value. e.g. Number of users affected by an issue is more than `value` in `interval`.\n            - `1min`: 1 minute\n            - `5min`: 5 minutes\n            - `15min`: 15 minutes\n            - `1hr`: 1 hour\n            - `1d`: 1 day\n            - `1w`: 1 week\n            - `30d`: 30 days\n        ```json\n            {\n                \"type\": \"event_unique_user_frequency_count\",\n                \"comparison\": {\n                    \"value\": 100,\n                    \"filters\": [{\"key\": \"foo\", \"match\": \"eq\", \"value\": \"bar\"}],\n                    \"interval\": \"1h\"\n                },\n                \"conditionResult\": true\n            }\n        ```\n\n        **Number of Events**\n        - `value`: A positive integer representing the number of events in an issue that must come in before the alert will fire\n        - `interval`: The time period in which to evaluate the value. e.g. Number of events in an issue is more than `value` in `interval`.\n            - `1min`: 1 minute\n            - `5min`: 5 minutes\n            - `15min`: 15 minutes\n            - `1hr`: 1 hour\n            - `1d`: 1 day\n            - `1w`: 1 week\n            - `30d`: 30 days\n        ```json\n            {\n                \"type\": \"event_frequency_count\",\n                \"comparison\": {\n                    \"value\": 100,\n                    \"interval\": \"1h\"\n                },\n                \"conditionResult\": true\n            }\n        ```\n\n        **Percent of Events**\n        - `value`: A positive integer representing the number of events in an issue that must come in before the alert will fire\n        - `interval`: The time period in which to evaluate the value. e.g. Number of events in an issue is `comparisonInterval` percent higher `value` compared to `interval`.\n            - `1min`: 1 minute\n            - `5min`: 5 minutes\n            - `15min`: 15 minutes\n            - `1hr`: 1 hour\n            - `1d`: 1 day\n            - `1w`: 1 week\n            - `30d`: 30 days\n        - `comparisonInterval`: The time period to compare against. See `interval` for options.\n        ```json\n            {\n                \"type\": \"event_frequency_percent\",\n                \"comparison\": {\n                    \"value\": 100,\n                    \"interval\": \"1h\",\n                    \"comparisonInterval\": \"1w\"\n                },\n                \"conditionResult\": true\n            }\n\n        ```\n\n        **Percentage of Sessions Affected Count**\n        - `value`: A positive integer representing the number of events in an issue that must come in before the alert will fire\n        - `interval`: The time period in which to evaluate the value. e.g. Percentage of sessions affected by an issue is more than `value` in `interval`.\n            - `1min`: 1 minute\n            - `5min`: 5 minutes\n            - `15min`: 15 minutes\n            - `1hr`: 1 hour\n            - `1d`: 1 day\n            - `1w`: 1 week\n            - `30d`: 30 days\n        ```json\n            {\n                \"type\": \"percent_sessions_count\",\n                \"comparison\": {\n                    \"value\": 10,\n                    \"interval\": \"1h\"\n                },\n                \"conditionResult\": true\n            }\n        ```\n\n        **Percentage of Sessions Affected Percent**\n        - `value`: A positive integer representing the number of events in an issue that must come in before the alert will fire\n        - `interval`: The time period in which to evaluate the value. e.g. Percentage of sessions affected by an issue is `comparisonInterval` percent higher `value` compared to `interval`.\n            - `1min`: 1 minute\n            - `5min`: 5 minutes\n            - `15min`: 15 minutes\n            - `1hr`: 1 hour\n            - `1d`: 1 day\n            - `1w`: 1 week\n            - `30d`: 30 days\n        - `comparisonInterval`: The time period to compare against. See `interval` for options.\n        ```json\n            {\n                \"type\": \"percent_sessions_percent\",\n                \"comparison\": {\n                    \"value\": 10,\n                    \"interval\": \"1h\"\n                },\n                \"conditionResult\": true\n            }\n        ```\n\n        **Event Attribute**\n        The event's `attribute` value `match` `value`\n\n        - `attribute`: The event attribute to match on. Valid values are: `message`, `platform`, `environment`, `type`, `error.handled`, `error.unhandled`, `error.main_thread`, `exception.type`, `exception.value`, `user.id`, `user.email`, `user.username`, `user.ip_address`, `http.method`, `http.url`, `http.status_code`, `sdk.name`, `stacktrace.code`, `stacktrace.module`, `stacktrace.filename`, `stacktrace.abs_path`, `stacktrace.package`, `unreal.crash_type`, `app.in_foreground`.\n        - `match`: The comparison operator\n            - `co`: Contains\n            - `nc`: Does not contain\n            - `eq`: Equals\n            - `ne`: Does not equal\n            - `sw`: Starts with\n            - `ew`: Ends with\n            - `is`: Is set\n            - `ns`: Is not set\n        - `value`: A string. Not required when match is `is` or `ns`.\n\n        ```json\n            {\n                \"type\": \"event_attribute\",\n                \"comparison\": {\n                    \"match\": \"co\",\n                    \"value\": \"bar\",\n                    \"attribute\": \"message\"\n                },\n                \"conditionResult\": true\n            }\n        ```\n\n        **Tagged Event**\n        The event's tags `key` match `value`\n        - `key`: The tag value\n        - `match`: The comparison operator\n            - `co`: Contains\n            - `nc`: Does not contain\n            - `eq`: Equals\n            - `ne`: Does not equal\n            - `sw`: Starts with\n            - `ew`: Ends with\n            - `is`: Is set\n            - `ns`: Is not set\n        - `value`: A string. Not required when match is `is` or `ns`.\n\n        ```json\n            {\n                \"type\": \"tagged_event\",\n                \"comparison\": {\n                    \"key\": \"level\",\n                    \"match\": \"eq\",\n                    \"value\": \"error\"\n                },\n                \"conditionResult\": true\n            }\n        ```\n\n        **Latest Release**\n        The event is from the latest release\n\n        ```json\n            {\n                \"type\": \"latest_release\",\n                \"comparison\": true,\n                \"conditionResult\": true\n            }\n        ```\n\n        **Release Age**\n        ```json\n            {\n                \"type\": \"latest_adopted_release\",\n                \"comparison\": {\n                    \"environment\": \"production\",\n                    \"ageComparison\": \"older\",\n                    \"releaseAgeType\": \"oldest\"\n                },\n                \"conditionResult\": true\n            }\n        ```\n\n        **Event Level**\n        The event's level is `match` `level`\n        - `match`: The comparison operator\n            - `eq`: Equal\n            - `gte`: Greater than or equal\n            - `lte`: Less than or equal\n        - `level`: The event level\n            - `50`: Fatal\n            - `40`: Error\n            - `30`: Warning\n            - `20`: Info\n            - `10`: Debug\n            - `0`: Sample\n\n        ```json\n            {\n                \"type\": \"level\",\n                \"comparison\": {\n                    \"level\": 50,\n                    \"match\": \"eq\"\n                },\n                \"conditionResult\": true\n            }\n        ```\n\n        ## Actions\n        A list of actions that take place when all required conditions and filters for the alert are met. See below for a list of possible actions.\n\n\n        **Notify on Preferred Channel**\n        - `data`: A dictionary with the fallthrough type option when choosing to notify Suggested Assignees. Leave empty if notifying a user or team.\n            - `fallthroughType`\n                - `ActiveMembers`\n                - `AllMembers`\n                - `NoOne`\n        - `config`: A dictionary with the configuration options for notification.\n            - `targetType`: The type of recipient to notify\n                - `user`: User\n                - `team`: Team\n                - `issue_owners`: Suggested Assignees\n            - `targetDisplay`: null\n            - `targetIdentifier`: The id of the user or team to notify. Leave null for Suggested Assignees.\n\n        ```json\n            {\n                \"type\":\"email\",\n                \"integrationId\":null,\n                \"data\":{},\n                \"config\":{\n                    \"targetType\":\"user\",\n                    \"targetDisplay\":null,\n                    \"targetIdentifier\":\"232692\"\n                },\n                \"status\":\"active\"\n            },\n            {\n                \"type\":\"email\",\n                \"integrationId\":null,\n                \"data\":{\n                    \"fallthroughType\":\"ActiveMembers\"\n                },\n                \"config\":{\n                    \"targetType\":\"issue_owners\",\n                    \"targetDisplay\":null,\n                    \"targetIdentifier\":\"\"}\n                ,\n                \"status\":\"active\"\n            }\n        ```\n        **Notify on Slack**\n        - `targetDisplay`: The name of the channel to notify in.\n        `integrationId`: The stringified ID of the integration.\n\n        ```json\n            {\n                \"type\":\"slack\",\n                \"config\":{\n                    \"targetType\":\"specific\",\n                    \"targetIdentifier\":\"\",\n                    \"targetDisplay\":\"notify-errors\"\n                },\n                \"integrationId\":\"1\",\n                \"data\":{},\n                \"status\":\"active\"\n            }\n        ```\n\n        **Notify on PagerDuty**\n        - `targetDisplay`: The name of the service to create the ticket in.\n        - `integrationId`: The stringified ID of the integration.\n        - `data[\"priority\"]`: The severity level for the notification.\n\n        ```json\n            {\n                \"type\":\"pagerduty\",\n                \"config\":{\n                    \"targetType\":\"specific\",\n                    \"targetIdentifier\":\"123456\",\n                    \"targetDisplay\":\"Error Service\"\n                    },\n                \"integrationId\":\"2345\",\n                \"data\":{\n                    \"priority\":\"default\"\n                },\n                \"status\":\"active\"\n            }\n        ```\n\n        **Notify on Discord**\n        - `targetDisplay`: The name of the service to create the ticket in.\n        - `integrationId`: The stringified ID of the integration.\n        - `data[\"tags\"]`: Comma separated list of tags to add to the notification.\n\n        ```json\n            {\n                \"type\":\"discord\",\n                \"config\":{\n                    \"targetType\":\"specific\",\n                    \"targetIdentifier\":\"12345\",\n                    \"targetDisplay\":\"\",\n                    },\n                \"integrationId\":\"1234\",\n                \"data\":{\n                    \"tags\":\"transaction,environment\"\n                },\n                \"status\":\"active\"\n            }\n        ```\n\n        **Notify on MSTeams**\n        - `targetIdentifier` - The integration ID associated with the Microsoft Teams team.\n        - `targetDisplay` - The name of the channel to send the notification to.\n        - `integrationId`: The stringified ID of the integration.\n        ```json\n            {\n                \"type\":\"msteams\",\n                \"config\":{\n                    \"targetType\":\"specific\",\n                    \"targetIdentifier\":\"19:a4b3kghaghgkjah357y6847@thread.skype\",\n                    \"targetDisplay\":\"notify-errors\"\n                },\n                \"integrationId\":\"1\",\n                \"data\":{},\n                \"status\":\"active\"\n            }\n        ```\n\n        **Notify on OpsGenie**\n        - `targetDisplay`: The name of the Opsgenie team.\n        - `targetIdentifier`: The ID of the Opsgenie team to send the notification to.\n        - `integrationId`: The stringified ID of the integration.\n        - `data[\"priority\"]`: The priority level for the notification.\n\n        ```json\n            {\n                \"type\":\"opsgenie\",\n                \"config\":{\n                    \"targetType\":\"specific\",\n                    \"targetIdentifier\":\"123456-Error-Service\",\n                    \"targetDisplay\":\"Error Service\"\n                    },\n                \"integrationId\":\"2345\",\n                \"data\":{\n                    \"priority\":\"P3\"\n                },\n                \"status\":\"active\"\n            }\n        ```\n\n        **Notify on Azure DevOps**\n        - `integrationId`: The stringified ID of the integration.\n        - `data` - A list of any fields you want to include in the ticket as objects.\n\n        ```json\n            {\n                \"type\":\"vsts\",\n                \"config\":{\n                    \"targetType\":\"specific\",\n                    \"targetIdentifier\":\",\n                    \"targetDisplay\":\"\"\n                    },\n                \"integrationId\":\"2345\",\n                \"data\":{...},\n                \"status\":\"active\"\n            }\n        ```\n\n        **Create a Jira ticket**\n        - `integrationId`: The stringified ID of the integration.\n        - `data` - A list of any fields you want to include in the ticket as objects.\n\n        ```json\n            {\n                \"type\":\"jira\",\n                \"config\":{\n                    \"targetType\":\"specific\",\n                    \"targetIdentifier\":\",\n                    \"targetDisplay\":\"\"\n                    },\n                \"integrationId\":\"2345\",\n                \"data\":{...},\n                \"status\":\"active\"\n            }\n        ```\n\n        **Create a Jira Server ticket**\n        - `integrationId`: The stringified ID of the integration.\n        - `data` - A list of any fields you want to include in the ticket as objects.\n\n        ```json\n            {\n                \"type\":\"jira_server\",\n                \"config\":{\n                    \"targetType\":\"specific\",\n                    \"targetIdentifier\":\",\n                    \"targetDisplay\":\"\"\n                    },\n                \"integrationId\":\"2345\",\n                \"data\":{...},\n                \"status\":\"active\"\n            }\n        ```\n\n        **Create a GitHub issue**\n        - `integrationId`: The stringified ID of the integration.\n        - `data` - A list of any fields you want to include in the ticket as objects.\n\n        ```json\n            {\n                \"type\":\"github\",\n                \"config\":{\n                    \"targetType\":\"specific\",\n                    \"targetIdentifier\":\",\n                    \"targetDisplay\":\"\"\n                    },\n                \"integrationId\":\"2345\",\n                \"data\":{\n                  \"additional_fields\": {\n                      \"assignee\": \"\",\n                      \"integration\": \"2345\",\n                      \"labels\": [],\n                      \"repo\": \"example-repo\",\n                  },\n                  \"dynamic_form_fields\": [\n                      {\n                        \"choices\": [[\"YourOrg/example-repo\", \"example-repo\"]],\n                        \"default\": \"YourOrg/example-repo\",\n                        \"label\": \"GitHub Repository\",\n                        \"name\": \"repo\",\n                        \"required\": true\n                        \"type\": \"select\",\n                        \"updatesForm\": true,\n                        \"url\": \"/extensions/github/search/example-repo/1234567/\",\n                      },\n                  ],\n                },\n                \"status\":\"active\"\n            }\n        ```\n        "
+                    "description": "The filters to run before the action will fire and the action(s) to fire.\n\n        `logicType` can be one of `any-short`, `all`, or `none`.\n\n        Below is a basic example. See below for all other options.\n\n        ```json\n            \"actionFilters\": [\n                {\n                    \"logicType\": \"any\",\n                    \"conditions\": [\n                        {\n                            \"type\": \"level\",\n                            \"comparison\": {\n                                \"level\": 50,\n                                \"match\": \"eq\"\n                            },\n                            \"conditionResult\": true\n                        }\n                    ],\n                    \"actions\": [\n                        {\n                            \"id\": \"123\",\n                            \"type\": \"email\",\n                            \"integrationId\": null,\n                            \"data\": {},\n                            \"config\": {\n                                \"targetType\": \"user\",\n                                \"targetDisplay\": null,\n                                \"targetIdentifier\": \"56789\"\n                            },\n                            \"status\": \"active\"\n                        }\n                    ]\n                }\n            ]\n        ```\n\n        ## Conditions\n\n        **Issue Age**\n        - `time`: One of `minute`, `hour`, `day`, or `week`.\n        - `value`: A positive integer.\n        - `comparisonType`: One of `older` or `newer`.\n        ```json\n            {\n                \"type\": \"age_comparison\",\n                \"comparison\": {\n                    \"time\": \"minute\",\n                    \"value\": 10,\n                    \"comparisonType\": \"older\"\n                },\n                \"conditionResult\": true\n            }\n\n        ```\n\n        **Issue Assignment**\n        - `targetType`: Who the issue is assigned to\n            - `Unassigned`: Unassigned\n            - `Member`: Assigned to a user\n            - `Team`: Assigned to a team\n        - `targetIdentifier`: The ID of the user or team from the `targetType`. Enter \"\" if `targetType` is `Unassigned`.\n        ```json\n            {\n                \"type\": \"assigned_to\",\n                \"comparison\": {\n                    \"targetType\": \"Member\",\n                    \"targetIdentifier\": 123456\n                },\n                \"conditionResult\": true\n            }\n        ```\n\n        **Issue Category**\n        - `value`: The issue category to filter to.\n            - `1`: Error issues\n            - `6`: Feedback issues\n            - `10`: Outage issues\n            - `11`: Metric issues\n            - `12`: DB Query issues\n            - `13`: HTTP Client issues\n            - `14`: Front end issues\n            - `15`: Mobile issues\n            - `17`: Preprod issues\n            - `19`: Configuration issues\n        ```json\n            {\n                \"type\": \"issue_category\",\n                \"comparison\": {\n                    \"value\": 1\n                },\n                \"conditionResult\": true\n            }\n        ```\n\n        **Issue Frequency**\n        - `value`: A positive integer representing how many times the issue has to happen before the alert will fire.\n        ```json\n            {\n                \"type\": \"issue_occurrences\",\n                \"comparison\": {\n                    \"value\": 10\n                },\n                \"conditionResult\": true\n            }\n        ```\n\n        **De-escalation**\n        - `comparison`: The priority threshold the issue must de-escalate below.\n            - `75`: High priority\n            - `50`: Medium priority\n            - `25`: Low priority\n        ```json\n            {\n                \"type\": \"issue_priority_deescalating\",\n                \"comparison\": 75,\n                \"conditionResult\": true\n            }\n        ```\n\n        **Issue Priority**\n        - `comparison`: The priority the issue must be for the alert to fire.\n            - `75`: High priority\n            - `50`: Medium priority\n            - `25`: Low priority\n        ```json\n            {\n                \"type\": \"issue_priority_greater_or_equal\",\n                \"comparison\": 75,\n                \"conditionResult\": true\n            }\n        ```\n\n        **Number of Users Affected**\n        - `value`: A positive integer representing the number of users that must be affected before the alert will fire.\n        - `filters`: A list of additional sub-filters to evaluate before the alert will fire.\n        - `interval`: The time period in which to evaluate the value. e.g. Number of users affected by an issue is more than `value` in `interval`.\n            - `1min`: 1 minute\n            - `5min`: 5 minutes\n            - `15min`: 15 minutes\n            - `1hr`: 1 hour\n            - `1d`: 1 day\n            - `1w`: 1 week\n            - `30d`: 30 days\n        ```json\n            {\n                \"type\": \"event_unique_user_frequency_count\",\n                \"comparison\": {\n                    \"value\": 100,\n                    \"filters\": [{\"key\": \"foo\", \"match\": \"eq\", \"value\": \"bar\"}],\n                    \"interval\": \"1h\"\n                },\n                \"conditionResult\": true\n            }\n        ```\n\n        **Number of Events**\n        - `value`: A positive integer representing the number of events in an issue that must come in before the alert will fire\n        - `interval`: The time period in which to evaluate the value. e.g. Number of events in an issue is more than `value` in `interval`.\n            - `1min`: 1 minute\n            - `5min`: 5 minutes\n            - `15min`: 15 minutes\n            - `1hr`: 1 hour\n            - `1d`: 1 day\n            - `1w`: 1 week\n            - `30d`: 30 days\n        ```json\n            {\n                \"type\": \"event_frequency_count\",\n                \"comparison\": {\n                    \"value\": 100,\n                    \"interval\": \"1h\"\n                },\n                \"conditionResult\": true\n            }\n        ```\n\n        **Percent of Events**\n        - `value`: A positive integer representing the number of events in an issue that must come in before the alert will fire\n        - `interval`: The time period in which to evaluate the value. e.g. Number of events in an issue is `comparisonInterval` percent higher `value` compared to `interval`.\n            - `1min`: 1 minute\n            - `5min`: 5 minutes\n            - `15min`: 15 minutes\n            - `1hr`: 1 hour\n            - `1d`: 1 day\n            - `1w`: 1 week\n            - `30d`: 30 days\n        - `comparisonInterval`: The time period to compare against. See `interval` for options.\n        ```json\n            {\n                \"type\": \"event_frequency_percent\",\n                \"comparison\": {\n                    \"value\": 100,\n                    \"interval\": \"1h\",\n                    \"comparisonInterval\": \"1w\"\n                },\n                \"conditionResult\": true\n            }\n\n        ```\n\n        **Percentage of Sessions Affected Count**\n        - `value`: A positive integer representing the number of events in an issue that must come in before the alert will fire\n        - `interval`: The time period in which to evaluate the value. e.g. Percentage of sessions affected by an issue is more than `value` in `interval`.\n            - `1min`: 1 minute\n            - `5min`: 5 minutes\n            - `15min`: 15 minutes\n            - `1hr`: 1 hour\n            - `1d`: 1 day\n            - `1w`: 1 week\n            - `30d`: 30 days\n        ```json\n            {\n                \"type\": \"percent_sessions_count\",\n                \"comparison\": {\n                    \"value\": 10,\n                    \"interval\": \"1h\"\n                },\n                \"conditionResult\": true\n            }\n        ```\n\n        **Percentage of Sessions Affected Percent**\n        - `value`: A positive integer representing the number of events in an issue that must come in before the alert will fire\n        - `interval`: The time period in which to evaluate the value. e.g. Percentage of sessions affected by an issue is `comparisonInterval` percent higher `value` compared to `interval`.\n            - `1min`: 1 minute\n            - `5min`: 5 minutes\n            - `15min`: 15 minutes\n            - `1hr`: 1 hour\n            - `1d`: 1 day\n            - `1w`: 1 week\n            - `30d`: 30 days\n        - `comparisonInterval`: The time period to compare against. See `interval` for options.\n        ```json\n            {\n                \"type\": \"percent_sessions_percent\",\n                \"comparison\": {\n                    \"value\": 10,\n                    \"interval\": \"1h\"\n                },\n                \"conditionResult\": true\n            }\n        ```\n\n        **Event Attribute**\n        The event's `attribute` value `match` `value`\n\n        - `attribute`: The event attribute to match on. Valid values are: `message`, `platform`, `environment`, `type`, `error.handled`, `error.unhandled`, `error.main_thread`, `exception.type`, `exception.value`, `user.id`, `user.email`, `user.username`, `user.ip_address`, `http.method`, `http.url`, `http.status_code`, `sdk.name`, `stacktrace.code`, `stacktrace.module`, `stacktrace.filename`, `stacktrace.abs_path`, `stacktrace.package`, `unreal.crash_type`, `app.in_foreground`.\n        - `match`: The comparison operator\n            - `co`: Contains\n            - `nc`: Does not contain\n            - `eq`: Equals\n            - `ne`: Does not equal\n            - `sw`: Starts with\n            - `ew`: Ends with\n            - `is`: Is set\n            - `ns`: Is not set\n        - `value`: A string. Not required when match is `is` or `ns`.\n\n        ```json\n            {\n                \"type\": \"event_attribute\",\n                \"comparison\": {\n                    \"match\": \"co\",\n                    \"value\": \"bar\",\n                    \"attribute\": \"message\"\n                },\n                \"conditionResult\": true\n            }\n        ```\n\n        **Tagged Event**\n        The event's tags `key` match `value`\n        - `key`: The tag value\n        - `match`: The comparison operator\n            - `co`: Contains\n            - `nc`: Does not contain\n            - `eq`: Equals\n            - `ne`: Does not equal\n            - `sw`: Starts with\n            - `ew`: Ends with\n            - `is`: Is set\n            - `ns`: Is not set\n        - `value`: A string. Not required when match is `is` or `ns`.\n\n        ```json\n            {\n                \"type\": \"tagged_event\",\n                \"comparison\": {\n                    \"key\": \"level\",\n                    \"match\": \"eq\",\n                    \"value\": \"error\"\n                },\n                \"conditionResult\": true\n            }\n        ```\n\n        **Latest Release**\n        The event is from the latest release\n\n        ```json\n            {\n                \"type\": \"latest_release\",\n                \"comparison\": true,\n                \"conditionResult\": true\n            }\n        ```\n\n        **Release Age**\n        ```json\n            {\n                \"type\": \"latest_adopted_release\",\n                \"comparison\": {\n                    \"environment\": \"production\",\n                    \"ageComparison\": \"older\",\n                    \"releaseAgeType\": \"oldest\"\n                },\n                \"conditionResult\": true\n            }\n        ```\n\n        **Event Level**\n        The event's level is `match` `level`\n        - `match`: The comparison operator\n            - `eq`: Equal\n            - `gte`: Greater than or equal\n            - `lte`: Less than or equal\n        - `level`: The event level\n            - `50`: Fatal\n            - `40`: Error\n            - `30`: Warning\n            - `20`: Info\n            - `10`: Debug\n            - `0`: Sample\n\n        ```json\n            {\n                \"type\": \"level\",\n                \"comparison\": {\n                    \"level\": 50,\n                    \"match\": \"eq\"\n                },\n                \"conditionResult\": true\n            }\n        ```\n\n        ## Actions\n        A list of actions that take place when all required conditions and filters for the alert are met. See below for a list of possible actions.\n\n\n        **Notify on Preferred Channel**\n        - `data`: A dictionary with the fallthrough type option when choosing to notify Suggested Assignees. Leave empty if notifying a user or team.\n            - `fallthroughType`\n                - `ActiveMembers`\n                - `AllMembers`\n                - `NoOne`\n        - `config`: A dictionary with the configuration options for notification.\n            - `targetType`: The type of recipient to notify\n                - `user`: User\n                - `team`: Team\n                - `issue_owners`: Suggested Assignees\n            - `targetDisplay`: null\n            - `targetIdentifier`: The id of the user or team to notify. Leave null for Suggested Assignees.\n\n        ```json\n            {\n                \"type\":\"email\",\n                \"integrationId\":null,\n                \"data\":{},\n                \"config\":{\n                    \"targetType\":\"user\",\n                    \"targetDisplay\":null,\n                    \"targetIdentifier\":\"232692\"\n                },\n                \"status\":\"active\"\n            },\n            {\n                \"type\":\"email\",\n                \"integrationId\":null,\n                \"data\":{\n                    \"fallthroughType\":\"ActiveMembers\"\n                },\n                \"config\":{\n                    \"targetType\":\"issue_owners\",\n                    \"targetDisplay\":null,\n                    \"targetIdentifier\":\"\"}\n                ,\n                \"status\":\"active\"\n            }\n        ```\n        **Notify on Slack**\n        - `targetDisplay`: The name of the channel to notify in.\n        `integrationId`: The stringified ID of the integration.\n\n        ```json\n            {\n                \"type\":\"slack\",\n                \"config\":{\n                    \"targetType\":\"specific\",\n                    \"targetIdentifier\":\"\",\n                    \"targetDisplay\":\"notify-errors\"\n                },\n                \"integrationId\":\"1\",\n                \"data\":{},\n                \"status\":\"active\"\n            }\n        ```\n\n        **Notify on PagerDuty**\n        - `targetDisplay`: The name of the service to create the ticket in.\n        - `integrationId`: The stringified ID of the integration.\n        - `data[\"priority\"]`: The severity level for the notification.\n\n        ```json\n            {\n                \"type\":\"pagerduty\",\n                \"config\":{\n                    \"targetType\":\"specific\",\n                    \"targetIdentifier\":\"123456\",\n                    \"targetDisplay\":\"Error Service\"\n                    },\n                \"integrationId\":\"2345\",\n                \"data\":{\n                    \"priority\":\"default\"\n                },\n                \"status\":\"active\"\n            }\n        ```\n\n        **Notify on Discord**\n        - `targetDisplay`: The name of the service to create the ticket in.\n        - `integrationId`: The stringified ID of the integration.\n        - `data[\"tags\"]`: Comma separated list of tags to add to the notification.\n\n        ```json\n            {\n                \"type\":\"discord\",\n                \"config\":{\n                    \"targetType\":\"specific\",\n                    \"targetIdentifier\":\"12345\",\n                    \"targetDisplay\":\"\",\n                    },\n                \"integrationId\":\"1234\",\n                \"data\":{\n                    \"tags\":\"transaction,environment\"\n                },\n                \"status\":\"active\"\n            }\n        ```\n\n        **Notify on MSTeams**\n        - `targetIdentifier` - The integration ID associated with the Microsoft Teams team.\n        - `targetDisplay` - The name of the channel to send the notification to.\n        - `integrationId`: The stringified ID of the integration.\n        ```json\n            {\n                \"type\":\"msteams\",\n                \"config\":{\n                    \"targetType\":\"specific\",\n                    \"targetIdentifier\":\"19:a4b3kghaghgkjah357y6847@thread.skype\",\n                    \"targetDisplay\":\"notify-errors\"\n                },\n                \"integrationId\":\"1\",\n                \"data\":{},\n                \"status\":\"active\"\n            }\n        ```\n\n        **Notify on OpsGenie**\n        - `targetDisplay`: The name of the Opsgenie team.\n        - `targetIdentifier`: The ID of the Opsgenie team to send the notification to.\n        - `integrationId`: The stringified ID of the integration.\n        - `data[\"priority\"]`: The priority level for the notification.\n\n        ```json\n            {\n                \"type\":\"opsgenie\",\n                \"config\":{\n                    \"targetType\":\"specific\",\n                    \"targetIdentifier\":\"123456-Error-Service\",\n                    \"targetDisplay\":\"Error Service\"\n                    },\n                \"integrationId\":\"2345\",\n                \"data\":{\n                    \"priority\":\"P3\"\n                },\n                \"status\":\"active\"\n            }\n        ```\n\n        **Notify on Azure DevOps**\n        - `integrationId`: The stringified ID of the integration.\n        - `data` - A list of any fields you want to include in the ticket as objects.\n\n        ```json\n            {\n                \"type\":\"vsts\",\n                \"config\":{\n                    \"targetType\":\"specific\",\n                    \"targetIdentifier\":\",\n                    \"targetDisplay\":\"\"\n                    },\n                \"integrationId\":\"2345\",\n                \"data\":{...},\n                \"status\":\"active\"\n            }\n        ```\n\n        **Create a Jira ticket**\n        - `integrationId`: The stringified ID of the integration.\n        - `data` - A list of any fields you want to include in the ticket as objects.\n\n        ```json\n            {\n                \"type\":\"jira\",\n                \"config\":{\n                    \"targetType\":\"specific\",\n                    \"targetIdentifier\":\",\n                    \"targetDisplay\":\"\"\n                    },\n                \"integrationId\":\"2345\",\n                \"data\":{...},\n                \"status\":\"active\"\n            }\n        ```\n\n        **Create a Jira Server ticket**\n        - `integrationId`: The stringified ID of the integration.\n        - `data` - A list of any fields you want to include in the ticket as objects.\n\n        ```json\n            {\n                \"type\":\"jira_server\",\n                \"config\":{\n                    \"targetType\":\"specific\",\n                    \"targetIdentifier\":\",\n                    \"targetDisplay\":\"\"\n                    },\n                \"integrationId\":\"2345\",\n                \"data\":{...},\n                \"status\":\"active\"\n            }\n        ```\n\n        **Create a GitHub issue**\n        - `integrationId`: The stringified ID of the integration.\n        - `data` - A list of any fields you want to include in the ticket as objects.\n\n        ```json\n            {\n                \"type\":\"github\",\n                \"config\":{\n                    \"targetType\":\"specific\",\n                    \"targetIdentifier\":\",\n                    \"targetDisplay\":\"\"\n                    },\n                \"integrationId\":\"2345\",\n                \"data\":{\n                  \"additional_fields\": {\n                      \"assignee\": \"\",\n                      \"integration\": \"2345\",\n                      \"labels\": [],\n                      \"repo\": \"example-repo\",\n                  },\n                  \"dynamic_form_fields\": [\n                      {\n                        \"choices\": [[\"YourOrg/example-repo\", \"example-repo\"]],\n                        \"default\": \"YourOrg/example-repo\",\n                        \"label\": \"GitHub Repository\",\n                        \"name\": \"repo\",\n                        \"required\": true\n                        \"type\": \"select\",\n                        \"updatesForm\": true,\n                        \"url\": \"/extensions/github/search/example-repo/1234567/\",\n                      },\n                  ],\n                },\n                \"status\":\"active\"\n            }\n        ```\n        "
                   },
                   "owner": {
                     "type": "string",
@@ -45460,7 +45762,7 @@
                             {
                               "id": "345678",
                               "type": "issue_priority_deescalating",
-                              "comparison": true,
+                              "comparison": 75,
                               "conditionResult": true
                             }
                           ],
@@ -63144,6 +63446,227 @@
         ]
       }
     },
+    "/api/0/sentry-app-installations/{uuid}/external-issue-actions/": {
+      "post": {
+        "operationId": "executeSentryAppInstallationExternalIssueAction",
+        "description": "**Experimental:** This API is under active development and may change.\n\nInvoke the installed app's issue-link callback and store the returned association.\nSubmit the app-specific form fields alongside `groupId`, `action`, and `uri`.",
+        "summary": "Create or Link an External Issue Through a Sentry App",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "uuid",
+            "schema": {
+              "type": "string"
+            },
+            "description": "The UUID of the Sentry App installation.",
+            "required": true
+          }
+        ],
+        "tags": [
+          "Integration"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "groupId": {
+                    "type": "string",
+                    "description": "The numeric Sentry issue ID."
+                  },
+                  "action": {
+                    "type": "string",
+                    "description": "The action to perform: `link` or `create`.",
+                    "enum": [
+                      "link",
+                      "create"
+                    ]
+                  },
+                  "uri": {
+                    "type": "string",
+                    "description": "The relative callback URI from the app's issue-link form."
+                  }
+                },
+                "required": [
+                  "action",
+                  "groupId",
+                  "uri"
+                ],
+                "additionalProperties": true
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "auth_token": [
+              "event:admin",
+              "event:write"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "issueId": {
+                      "type": "string"
+                    },
+                    "serviceType": {
+                      "type": "string"
+                    },
+                    "displayName": {
+                      "type": "string"
+                    },
+                    "webUrl": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "displayName",
+                    "id",
+                    "issueId",
+                    "serviceType",
+                    "webUrl"
+                  ]
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        },
+        "x-sentry-experimental": true
+      }
+    },
+    "/api/0/sentry-app-installations/{uuid}/external-requests/": {
+      "get": {
+        "operationId": "getSentryAppInstallationExternalRequestOptions",
+        "description": "**Experimental:** This API is under active development and may change.\n\nRequest select options from the installed app. Each choice contains its value followed by its label.",
+        "summary": "Retrieve a Sentry App's Select Field Options",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "uuid",
+            "schema": {
+              "type": "string"
+            },
+            "description": "The UUID of the Sentry App installation.",
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "uri",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "description": "The relative URI of the select field's options callback.",
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "projectId",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "The Sentry project ID to include in the options request."
+          },
+          {
+            "in": "query",
+            "name": "query",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "description": "The search text for select options."
+          },
+          {
+            "in": "query",
+            "name": "dependentData",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "description": "A JSON-encoded object containing the values of fields this select depends on."
+          }
+        ],
+        "tags": [
+          "Integration"
+        ],
+        "security": [
+          {
+            "auth_token": [
+              "org:admin",
+              "org:integrations",
+              "org:read",
+              "org:write"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "choices": {
+                      "type": "array",
+                      "items": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "defaultValue": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "choices"
+                  ]
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        },
+        "x-sentry-experimental": true
+      }
+    },
     "/api/0/sentry-apps/{sentry_app_id_or_slug}/": {
       "get": {
         "operationId": "getSentryApp",
@@ -68270,7 +68793,7 @@
                 "id"
               ]
             },
-            "description": "Sort order of the resulting tag values. Prefix with '-' for descending order. Default is '-id'."
+            "description": "Sort order of the resulting tag values. Default is `id`."
           },
           {
             "in": "query",
@@ -72813,6 +73336,68 @@
         }
       }
     },
+    "/api/0/organizations/{organization_id_or_slug}/issues/{issue_id}/external-issues/{external_issue_id}/": {
+      "delete": {
+        "operationId": "deleteOrganizationIssueExternalIssue",
+        "description": "**Experimental:** This API is under active development and may change.\n\nRemove a custom integration's association with a Sentry issue. The external issue is not deleted.",
+        "summary": "Unlink a Custom Integration's External Issue",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "organization_id_or_slug",
+            "schema": {
+              "type": "string"
+            },
+            "description": "The ID or slug of the organization the resource belongs to.",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "issue_id",
+            "schema": {
+              "type": "string"
+            },
+            "description": "The ID of the issue you'd like to query.",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "external_issue_id",
+            "schema": {
+              "type": "string"
+            },
+            "description": "The ID of the custom integration issue link to remove.",
+            "required": true
+          }
+        ],
+        "tags": [
+          "Integration"
+        ],
+        "security": [
+          {
+            "auth_token": [
+              "event:admin",
+              "event:write"
+            ]
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        },
+        "x-sentry-experimental": true
+      }
+    },
     "/api/0/organizations/{organization_id_or_slug}/issues/{issue_id}/hashes/": {
       "get": {
         "operationId": "listOrganizationIssueHashes",
@@ -73684,6 +74269,200 @@
         }
       }
     },
+    "/api/0/organizations/{organization_id_or_slug}/issues/{issue_id}/integrations/": {
+      "get": {
+        "operationId": "listOrganizationIssueIntegrations",
+        "description": "**Experimental:** This API is under active development and may change.\n\nList the organization's issue-tracker integrations and the external issues\nlinked to this Sentry issue through each integration. The external issue's\n`id` is the Sentry link identifier used by the unlink endpoint.",
+        "summary": "List an Issue's Tracker Integrations and Links",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "organization_id_or_slug",
+            "schema": {
+              "type": "string"
+            },
+            "description": "The ID or slug of the organization the resource belongs to.",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "issue_id",
+            "schema": {
+              "type": "string"
+            },
+            "description": "The ID of the issue you'd like to query.",
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "description": "A pointer to the last object fetched and its sort order; used to retrieve the next or previous results.",
+            "x-learn-more": "https://docs.sentry.io/api/pagination/"
+          },
+          {
+            "in": "query",
+            "name": "per_page",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "The maximum number of integrations to return per page (1–100)."
+          }
+        ],
+        "tags": [
+          "Integration"
+        ],
+        "security": [
+          {
+            "auth_token": [
+              "event:admin",
+              "event:read",
+              "event:write"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "icon": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "domainName": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "accountType": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "scopes": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        },
+                        "nullable": true
+                      },
+                      "outOfDate": {
+                        "type": "boolean",
+                        "nullable": true
+                      },
+                      "status": {
+                        "type": "string"
+                      },
+                      "provider": {
+                        "type": "object",
+                        "properties": {
+                          "key": {
+                            "type": "string"
+                          },
+                          "slug": {
+                            "type": "string"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "canAdd": {
+                            "type": "boolean"
+                          },
+                          "canDisable": {
+                            "type": "boolean"
+                          },
+                          "features": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "aspects": {
+                            "type": "object",
+                            "additionalProperties": {}
+                          }
+                        },
+                        "required": [
+                          "aspects",
+                          "canAdd",
+                          "canDisable",
+                          "features",
+                          "key",
+                          "name",
+                          "slug"
+                        ]
+                      },
+                      "externalIssues": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "key": {
+                              "type": "string"
+                            },
+                            "url": {
+                              "type": "string"
+                            },
+                            "title": {
+                              "type": "string",
+                              "nullable": true
+                            },
+                            "description": {
+                              "type": "string",
+                              "nullable": true
+                            },
+                            "displayName": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "description",
+                            "displayName",
+                            "id",
+                            "key",
+                            "title",
+                            "url"
+                          ]
+                        }
+                      }
+                    },
+                    "required": [
+                      "accountType",
+                      "domainName",
+                      "externalIssues",
+                      "icon",
+                      "id",
+                      "name",
+                      "outOfDate",
+                      "provider",
+                      "scopes",
+                      "status"
+                    ]
+                  }
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "x-sentry-experimental": true
+      }
+    },
     "/api/0/organizations/{organization_id_or_slug}/issues/{issue_id}/integrations/{integration_id}/": {
       "get": {
         "operationId": "Retrieve an Integration's Issue Config for an Issue",
@@ -74111,7 +74890,7 @@
                 "properties": {
                   "externalIssue": {
                     "type": "string",
-                    "description": "The identifier of the existing external issue to link, as understood by the provider (such as a Jira issue key)."
+                    "description": "The identifier or full URL of the existing external issue to link. URL support depends on the selected integration."
                   },
                   "repo": {
                     "type": "string",
@@ -78513,6 +79292,9 @@
             "isFavorited": {
               "type": "boolean"
             },
+            "isHidden": {
+              "type": "boolean"
+            },
             "projects": {
               "type": "array",
               "items": {
@@ -78531,6 +79313,7 @@
             "filters",
             "id",
             "isFavorited",
+            "isHidden",
             "lastVisited",
             "permissions",
             "prebuiltId",
@@ -84412,6 +85195,53 @@
           "status"
         ]
       },
+      "IntegrationRepositoriesResponse": {
+        "type": "object",
+        "properties": {
+          "repos": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "identifier": {
+                  "type": "string"
+                },
+                "isInstalled": {
+                  "type": "boolean"
+                },
+                "defaultBranch": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "externalId": {
+                  "type": "string"
+                },
+                "url": {
+                  "type": "string",
+                  "nullable": true
+                }
+              },
+              "required": [
+                "defaultBranch",
+                "externalId",
+                "identifier",
+                "isInstalled",
+                "name",
+                "url"
+              ]
+            }
+          },
+          "searchable": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "repos"
+        ]
+      },
       "IssueEventDetailsResponse": {
         "type": "object",
         "properties": {
@@ -85052,6 +85882,133 @@
           "userReport"
         ]
       },
+      "IssueIntegrationsResponse": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "icon": {
+              "type": "string",
+              "nullable": true
+            },
+            "domainName": {
+              "type": "string",
+              "nullable": true
+            },
+            "accountType": {
+              "type": "string",
+              "nullable": true
+            },
+            "scopes": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "nullable": true
+            },
+            "outOfDate": {
+              "type": "boolean",
+              "nullable": true
+            },
+            "status": {
+              "type": "string"
+            },
+            "provider": {
+              "type": "object",
+              "properties": {
+                "key": {
+                  "type": "string"
+                },
+                "slug": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "canAdd": {
+                  "type": "boolean"
+                },
+                "canDisable": {
+                  "type": "boolean"
+                },
+                "features": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "aspects": {
+                  "type": "object",
+                  "additionalProperties": {}
+                }
+              },
+              "required": [
+                "aspects",
+                "canAdd",
+                "canDisable",
+                "features",
+                "key",
+                "name",
+                "slug"
+              ]
+            },
+            "externalIssues": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "key": {
+                    "type": "string"
+                  },
+                  "url": {
+                    "type": "string"
+                  },
+                  "title": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "description": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "displayName": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "description",
+                  "displayName",
+                  "id",
+                  "key",
+                  "title",
+                  "url"
+                ]
+              }
+            }
+          },
+          "required": [
+            "accountType",
+            "domainName",
+            "externalIssues",
+            "icon",
+            "id",
+            "name",
+            "outOfDate",
+            "provider",
+            "scopes",
+            "status"
+          ]
+        }
+      },
       "LatestBaseSnapshotResponse": {
         "type": "object",
         "properties": {
@@ -85540,7 +86497,7 @@
         "properties": {
           "externalIssue": {
             "type": "string",
-            "description": "The identifier of the existing external issue to link, as understood by the provider (such as a Jira issue key)."
+            "description": "The identifier or full URL of the existing external issue to link. URL support depends on the selected integration."
           },
           "repo": {
             "type": "string",
@@ -94201,6 +95158,10 @@
                     "type"
                   ]
                 }
+              },
+              "estimatedIngestionDelaySeconds": {
+                "type": "number",
+                "format": "double"
               }
             },
             "required": [
@@ -99405,6 +100366,33 @@
           "triggerType"
         ]
       },
+      "PlatformExternalIssueResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "issueId": {
+            "type": "string"
+          },
+          "serviceType": {
+            "type": "string"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "webUrl": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "displayName",
+          "id",
+          "issueId",
+          "serviceType",
+          "webUrl"
+        ]
+      },
       "ProjectAdmin": {
         "type": "object",
         "properties": {
@@ -102510,6 +103498,100 @@
           "models"
         ]
       },
+      "SentryAppComponentsResponse": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "uuid": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string"
+            },
+            "schema": {
+              "type": "object",
+              "additionalProperties": {}
+            },
+            "error": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    },
+                    "context": {
+                      "type": "object",
+                      "additionalProperties": {}
+                    }
+                  }
+                }
+              ]
+            },
+            "sentryApp": {
+              "type": "object",
+              "properties": {
+                "uuid": {
+                  "type": "string"
+                },
+                "slug": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "avatars": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "avatarType": {
+                        "type": "string"
+                      },
+                      "avatarUuid": {
+                        "type": "string"
+                      },
+                      "avatarUrl": {
+                        "type": "string"
+                      },
+                      "color": {
+                        "type": "boolean"
+                      },
+                      "photoType": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "avatarType",
+                      "avatarUrl",
+                      "avatarUuid",
+                      "color",
+                      "photoType"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "avatars",
+                "name",
+                "slug",
+                "uuid"
+              ]
+            }
+          },
+          "required": [
+            "error",
+            "schema",
+            "sentryApp",
+            "type",
+            "uuid"
+          ]
+        }
+      },
       "SentryAppDetailsResponse": {
         "type": "object",
         "properties": {
@@ -102670,6 +103752,53 @@
           "webhookEvents",
           "webhookHeaders"
         ]
+      },
+      "SentryAppExternalRequestOptionsResponse": {
+        "type": "object",
+        "properties": {
+          "choices": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "defaultValue": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "choices"
+        ]
+      },
+      "SentryAppInstallationExternalIssueActions": {
+        "type": "object",
+        "properties": {
+          "groupId": {
+            "type": "string",
+            "description": "The numeric Sentry issue ID."
+          },
+          "action": {
+            "type": "string",
+            "description": "The action to perform: `link` or `create`.",
+            "enum": [
+              "link",
+              "create"
+            ]
+          },
+          "uri": {
+            "type": "string",
+            "description": "The relative callback URI from the app's issue-link form."
+          }
+        },
+        "required": [
+          "action",
+          "groupId",
+          "uri"
+        ],
+        "additionalProperties": true
       },
       "SentryAppParser": {
         "type": "object",
@@ -106395,7 +107524,7 @@
                 "logic_type"
               ]
             },
-            "description": "The filters to run before the action will fire and the action(s) to fire.\n\n        `logicType` can be one of `any-short`, `all`, or `none`.\n\n        Below is a basic example. See below for all other options.\n\n        ```json\n            \"actionFilters\": [\n                {\n                    \"logicType\": \"any\",\n                    \"conditions\": [\n                        {\n                            \"type\": \"level\",\n                            \"comparison\": {\n                                \"level\": 50,\n                                \"match\": \"eq\"\n                            },\n                            \"conditionResult\": true\n                        }\n                    ],\n                    \"actions\": [\n                        {\n                            \"id\": \"123\",\n                            \"type\": \"email\",\n                            \"integrationId\": null,\n                            \"data\": {},\n                            \"config\": {\n                                \"targetType\": \"user\",\n                                \"targetDisplay\": null,\n                                \"targetIdentifier\": \"56789\"\n                            },\n                            \"status\": \"active\"\n                        }\n                    ]\n                }\n            ]\n        ```\n\n        ## Conditions\n\n        **Issue Age**\n        - `time`: One of `minute`, `hour`, `day`, or `week`.\n        - `value`: A positive integer.\n        - `comparisonType`: One of `older` or `newer`.\n        ```json\n            {\n                \"type\": \"age_comparison\",\n                \"comparison\": {\n                    \"time\": \"minute\",\n                    \"value\": 10,\n                    \"comparisonType\": \"older\"\n                },\n                \"conditionResult\": true\n            }\n\n        ```\n\n        **Issue Assignment**\n        - `targetType`: Who the issue is assigned to\n            - `Unassigned`: Unassigned\n            - `Member`: Assigned to a user\n            - `Team`: Assigned to a team\n        - `targetIdentifier`: The ID of the user or team from the `targetType`. Enter \"\" if `targetType` is `Unassigned`.\n        ```json\n            {\n                \"type\": \"assigned_to\",\n                \"comparison\": {\n                    \"targetType\": \"Member\",\n                    \"targetIdentifier\": 123456\n                },\n                \"conditionResult\": true\n            }\n        ```\n\n        **Issue Category**\n        - `value`: The issue category to filter to.\n            - `1`: Error issues\n            - `6`: Feedback issues\n            - `10`: Outage issues\n            - `11`: Metric issues\n            - `12`: DB Query issues\n            - `13`: HTTP Client issues\n            - `14`: Front end issues\n            - `15`: Mobile issues\n            - `17`: Preprod issues\n            - `19`: Configuration issues\n        ```json\n            {\n                \"type\": \"issue_category\",\n                \"comparison\": {\n                    \"value\": 1\n                },\n                \"conditionResult\": true\n            }\n        ```\n\n        **Issue Frequency**\n        - `value`: A positive integer representing how many times the issue has to happen before the alert will fire.\n        ```json\n            {\n                \"type\": \"issue_occurrences\",\n                \"comparison\": {\n                    \"value\": 10\n                },\n                \"conditionResult\": true\n            }\n        ```\n\n        **De-escalation**\n        ```json\n            {\n                \"type\": \"issue_priority_deescalating\",\n                \"comparison\": true,\n                \"conditionResult\": true\n            }\n        ```\n\n        **Issue Priority**\n        - `comparison`: The priority the issue must be for the alert to fire.\n            - `75`: High priority\n            - `50`: Medium priority\n            - `25`: Low priority\n        ```json\n            {\n                \"type\": \"issue_priority_greater_or_equal\",\n                \"comparison\": 75,\n                \"conditionResult\": true\n            }\n        ```\n\n        **Number of Users Affected**\n        - `value`: A positive integer representing the number of users that must be affected before the alert will fire.\n        - `filters`: A list of additional sub-filters to evaluate before the alert will fire.\n        - `interval`: The time period in which to evaluate the value. e.g. Number of users affected by an issue is more than `value` in `interval`.\n            - `1min`: 1 minute\n            - `5min`: 5 minutes\n            - `15min`: 15 minutes\n            - `1hr`: 1 hour\n            - `1d`: 1 day\n            - `1w`: 1 week\n            - `30d`: 30 days\n        ```json\n            {\n                \"type\": \"event_unique_user_frequency_count\",\n                \"comparison\": {\n                    \"value\": 100,\n                    \"filters\": [{\"key\": \"foo\", \"match\": \"eq\", \"value\": \"bar\"}],\n                    \"interval\": \"1h\"\n                },\n                \"conditionResult\": true\n            }\n        ```\n\n        **Number of Events**\n        - `value`: A positive integer representing the number of events in an issue that must come in before the alert will fire\n        - `interval`: The time period in which to evaluate the value. e.g. Number of events in an issue is more than `value` in `interval`.\n            - `1min`: 1 minute\n            - `5min`: 5 minutes\n            - `15min`: 15 minutes\n            - `1hr`: 1 hour\n            - `1d`: 1 day\n            - `1w`: 1 week\n            - `30d`: 30 days\n        ```json\n            {\n                \"type\": \"event_frequency_count\",\n                \"comparison\": {\n                    \"value\": 100,\n                    \"interval\": \"1h\"\n                },\n                \"conditionResult\": true\n            }\n        ```\n\n        **Percent of Events**\n        - `value`: A positive integer representing the number of events in an issue that must come in before the alert will fire\n        - `interval`: The time period in which to evaluate the value. e.g. Number of events in an issue is `comparisonInterval` percent higher `value` compared to `interval`.\n            - `1min`: 1 minute\n            - `5min`: 5 minutes\n            - `15min`: 15 minutes\n            - `1hr`: 1 hour\n            - `1d`: 1 day\n            - `1w`: 1 week\n            - `30d`: 30 days\n        - `comparisonInterval`: The time period to compare against. See `interval` for options.\n        ```json\n            {\n                \"type\": \"event_frequency_percent\",\n                \"comparison\": {\n                    \"value\": 100,\n                    \"interval\": \"1h\",\n                    \"comparisonInterval\": \"1w\"\n                },\n                \"conditionResult\": true\n            }\n\n        ```\n\n        **Percentage of Sessions Affected Count**\n        - `value`: A positive integer representing the number of events in an issue that must come in before the alert will fire\n        - `interval`: The time period in which to evaluate the value. e.g. Percentage of sessions affected by an issue is more than `value` in `interval`.\n            - `1min`: 1 minute\n            - `5min`: 5 minutes\n            - `15min`: 15 minutes\n            - `1hr`: 1 hour\n            - `1d`: 1 day\n            - `1w`: 1 week\n            - `30d`: 30 days\n        ```json\n            {\n                \"type\": \"percent_sessions_count\",\n                \"comparison\": {\n                    \"value\": 10,\n                    \"interval\": \"1h\"\n                },\n                \"conditionResult\": true\n            }\n        ```\n\n        **Percentage of Sessions Affected Percent**\n        - `value`: A positive integer representing the number of events in an issue that must come in before the alert will fire\n        - `interval`: The time period in which to evaluate the value. e.g. Percentage of sessions affected by an issue is `comparisonInterval` percent higher `value` compared to `interval`.\n            - `1min`: 1 minute\n            - `5min`: 5 minutes\n            - `15min`: 15 minutes\n            - `1hr`: 1 hour\n            - `1d`: 1 day\n            - `1w`: 1 week\n            - `30d`: 30 days\n        - `comparisonInterval`: The time period to compare against. See `interval` for options.\n        ```json\n            {\n                \"type\": \"percent_sessions_percent\",\n                \"comparison\": {\n                    \"value\": 10,\n                    \"interval\": \"1h\"\n                },\n                \"conditionResult\": true\n            }\n        ```\n\n        **Event Attribute**\n        The event's `attribute` value `match` `value`\n\n        - `attribute`: The event attribute to match on. Valid values are: `message`, `platform`, `environment`, `type`, `error.handled`, `error.unhandled`, `error.main_thread`, `exception.type`, `exception.value`, `user.id`, `user.email`, `user.username`, `user.ip_address`, `http.method`, `http.url`, `http.status_code`, `sdk.name`, `stacktrace.code`, `stacktrace.module`, `stacktrace.filename`, `stacktrace.abs_path`, `stacktrace.package`, `unreal.crash_type`, `app.in_foreground`.\n        - `match`: The comparison operator\n            - `co`: Contains\n            - `nc`: Does not contain\n            - `eq`: Equals\n            - `ne`: Does not equal\n            - `sw`: Starts with\n            - `ew`: Ends with\n            - `is`: Is set\n            - `ns`: Is not set\n        - `value`: A string. Not required when match is `is` or `ns`.\n\n        ```json\n            {\n                \"type\": \"event_attribute\",\n                \"comparison\": {\n                    \"match\": \"co\",\n                    \"value\": \"bar\",\n                    \"attribute\": \"message\"\n                },\n                \"conditionResult\": true\n            }\n        ```\n\n        **Tagged Event**\n        The event's tags `key` match `value`\n        - `key`: The tag value\n        - `match`: The comparison operator\n            - `co`: Contains\n            - `nc`: Does not contain\n            - `eq`: Equals\n            - `ne`: Does not equal\n            - `sw`: Starts with\n            - `ew`: Ends with\n            - `is`: Is set\n            - `ns`: Is not set\n        - `value`: A string. Not required when match is `is` or `ns`.\n\n        ```json\n            {\n                \"type\": \"tagged_event\",\n                \"comparison\": {\n                    \"key\": \"level\",\n                    \"match\": \"eq\",\n                    \"value\": \"error\"\n                },\n                \"conditionResult\": true\n            }\n        ```\n\n        **Latest Release**\n        The event is from the latest release\n\n        ```json\n            {\n                \"type\": \"latest_release\",\n                \"comparison\": true,\n                \"conditionResult\": true\n            }\n        ```\n\n        **Release Age**\n        ```json\n            {\n                \"type\": \"latest_adopted_release\",\n                \"comparison\": {\n                    \"environment\": \"production\",\n                    \"ageComparison\": \"older\",\n                    \"releaseAgeType\": \"oldest\"\n                },\n                \"conditionResult\": true\n            }\n        ```\n\n        **Event Level**\n        The event's level is `match` `level`\n        - `match`: The comparison operator\n            - `eq`: Equal\n            - `gte`: Greater than or equal\n            - `lte`: Less than or equal\n        - `level`: The event level\n            - `50`: Fatal\n            - `40`: Error\n            - `30`: Warning\n            - `20`: Info\n            - `10`: Debug\n            - `0`: Sample\n\n        ```json\n            {\n                \"type\": \"level\",\n                \"comparison\": {\n                    \"level\": 50,\n                    \"match\": \"eq\"\n                },\n                \"conditionResult\": true\n            }\n        ```\n\n        ## Actions\n        A list of actions that take place when all required conditions and filters for the alert are met. See below for a list of possible actions.\n\n\n        **Notify on Preferred Channel**\n        - `data`: A dictionary with the fallthrough type option when choosing to notify Suggested Assignees. Leave empty if notifying a user or team.\n            - `fallthroughType`\n                - `ActiveMembers`\n                - `AllMembers`\n                - `NoOne`\n        - `config`: A dictionary with the configuration options for notification.\n            - `targetType`: The type of recipient to notify\n                - `user`: User\n                - `team`: Team\n                - `issue_owners`: Suggested Assignees\n            - `targetDisplay`: null\n            - `targetIdentifier`: The id of the user or team to notify. Leave null for Suggested Assignees.\n\n        ```json\n            {\n                \"type\":\"email\",\n                \"integrationId\":null,\n                \"data\":{},\n                \"config\":{\n                    \"targetType\":\"user\",\n                    \"targetDisplay\":null,\n                    \"targetIdentifier\":\"232692\"\n                },\n                \"status\":\"active\"\n            },\n            {\n                \"type\":\"email\",\n                \"integrationId\":null,\n                \"data\":{\n                    \"fallthroughType\":\"ActiveMembers\"\n                },\n                \"config\":{\n                    \"targetType\":\"issue_owners\",\n                    \"targetDisplay\":null,\n                    \"targetIdentifier\":\"\"}\n                ,\n                \"status\":\"active\"\n            }\n        ```\n        **Notify on Slack**\n        - `targetDisplay`: The name of the channel to notify in.\n        `integrationId`: The stringified ID of the integration.\n\n        ```json\n            {\n                \"type\":\"slack\",\n                \"config\":{\n                    \"targetType\":\"specific\",\n                    \"targetIdentifier\":\"\",\n                    \"targetDisplay\":\"notify-errors\"\n                },\n                \"integrationId\":\"1\",\n                \"data\":{},\n                \"status\":\"active\"\n            }\n        ```\n\n        **Notify on PagerDuty**\n        - `targetDisplay`: The name of the service to create the ticket in.\n        - `integrationId`: The stringified ID of the integration.\n        - `data[\"priority\"]`: The severity level for the notification.\n\n        ```json\n            {\n                \"type\":\"pagerduty\",\n                \"config\":{\n                    \"targetType\":\"specific\",\n                    \"targetIdentifier\":\"123456\",\n                    \"targetDisplay\":\"Error Service\"\n                    },\n                \"integrationId\":\"2345\",\n                \"data\":{\n                    \"priority\":\"default\"\n                },\n                \"status\":\"active\"\n            }\n        ```\n\n        **Notify on Discord**\n        - `targetDisplay`: The name of the service to create the ticket in.\n        - `integrationId`: The stringified ID of the integration.\n        - `data[\"tags\"]`: Comma separated list of tags to add to the notification.\n\n        ```json\n            {\n                \"type\":\"discord\",\n                \"config\":{\n                    \"targetType\":\"specific\",\n                    \"targetIdentifier\":\"12345\",\n                    \"targetDisplay\":\"\",\n                    },\n                \"integrationId\":\"1234\",\n                \"data\":{\n                    \"tags\":\"transaction,environment\"\n                },\n                \"status\":\"active\"\n            }\n        ```\n\n        **Notify on MSTeams**\n        - `targetIdentifier` - The integration ID associated with the Microsoft Teams team.\n        - `targetDisplay` - The name of the channel to send the notification to.\n        - `integrationId`: The stringified ID of the integration.\n        ```json\n            {\n                \"type\":\"msteams\",\n                \"config\":{\n                    \"targetType\":\"specific\",\n                    \"targetIdentifier\":\"19:a4b3kghaghgkjah357y6847@thread.skype\",\n                    \"targetDisplay\":\"notify-errors\"\n                },\n                \"integrationId\":\"1\",\n                \"data\":{},\n                \"status\":\"active\"\n            }\n        ```\n\n        **Notify on OpsGenie**\n        - `targetDisplay`: The name of the Opsgenie team.\n        - `targetIdentifier`: The ID of the Opsgenie team to send the notification to.\n        - `integrationId`: The stringified ID of the integration.\n        - `data[\"priority\"]`: The priority level for the notification.\n\n        ```json\n            {\n                \"type\":\"opsgenie\",\n                \"config\":{\n                    \"targetType\":\"specific\",\n                    \"targetIdentifier\":\"123456-Error-Service\",\n                    \"targetDisplay\":\"Error Service\"\n                    },\n                \"integrationId\":\"2345\",\n                \"data\":{\n                    \"priority\":\"P3\"\n                },\n                \"status\":\"active\"\n            }\n        ```\n\n        **Notify on Azure DevOps**\n        - `integrationId`: The stringified ID of the integration.\n        - `data` - A list of any fields you want to include in the ticket as objects.\n\n        ```json\n            {\n                \"type\":\"vsts\",\n                \"config\":{\n                    \"targetType\":\"specific\",\n                    \"targetIdentifier\":\",\n                    \"targetDisplay\":\"\"\n                    },\n                \"integrationId\":\"2345\",\n                \"data\":{...},\n                \"status\":\"active\"\n            }\n        ```\n\n        **Create a Jira ticket**\n        - `integrationId`: The stringified ID of the integration.\n        - `data` - A list of any fields you want to include in the ticket as objects.\n\n        ```json\n            {\n                \"type\":\"jira\",\n                \"config\":{\n                    \"targetType\":\"specific\",\n                    \"targetIdentifier\":\",\n                    \"targetDisplay\":\"\"\n                    },\n                \"integrationId\":\"2345\",\n                \"data\":{...},\n                \"status\":\"active\"\n            }\n        ```\n\n        **Create a Jira Server ticket**\n        - `integrationId`: The stringified ID of the integration.\n        - `data` - A list of any fields you want to include in the ticket as objects.\n\n        ```json\n            {\n                \"type\":\"jira_server\",\n                \"config\":{\n                    \"targetType\":\"specific\",\n                    \"targetIdentifier\":\",\n                    \"targetDisplay\":\"\"\n                    },\n                \"integrationId\":\"2345\",\n                \"data\":{...},\n                \"status\":\"active\"\n            }\n        ```\n\n        **Create a GitHub issue**\n        - `integrationId`: The stringified ID of the integration.\n        - `data` - A list of any fields you want to include in the ticket as objects.\n\n        ```json\n            {\n                \"type\":\"github\",\n                \"config\":{\n                    \"targetType\":\"specific\",\n                    \"targetIdentifier\":\",\n                    \"targetDisplay\":\"\"\n                    },\n                \"integrationId\":\"2345\",\n                \"data\":{\n                  \"additional_fields\": {\n                      \"assignee\": \"\",\n                      \"integration\": \"2345\",\n                      \"labels\": [],\n                      \"repo\": \"example-repo\",\n                  },\n                  \"dynamic_form_fields\": [\n                      {\n                        \"choices\": [[\"YourOrg/example-repo\", \"example-repo\"]],\n                        \"default\": \"YourOrg/example-repo\",\n                        \"label\": \"GitHub Repository\",\n                        \"name\": \"repo\",\n                        \"required\": true\n                        \"type\": \"select\",\n                        \"updatesForm\": true,\n                        \"url\": \"/extensions/github/search/example-repo/1234567/\",\n                      },\n                  ],\n                },\n                \"status\":\"active\"\n            }\n        ```\n        "
+            "description": "The filters to run before the action will fire and the action(s) to fire.\n\n        `logicType` can be one of `any-short`, `all`, or `none`.\n\n        Below is a basic example. See below for all other options.\n\n        ```json\n            \"actionFilters\": [\n                {\n                    \"logicType\": \"any\",\n                    \"conditions\": [\n                        {\n                            \"type\": \"level\",\n                            \"comparison\": {\n                                \"level\": 50,\n                                \"match\": \"eq\"\n                            },\n                            \"conditionResult\": true\n                        }\n                    ],\n                    \"actions\": [\n                        {\n                            \"id\": \"123\",\n                            \"type\": \"email\",\n                            \"integrationId\": null,\n                            \"data\": {},\n                            \"config\": {\n                                \"targetType\": \"user\",\n                                \"targetDisplay\": null,\n                                \"targetIdentifier\": \"56789\"\n                            },\n                            \"status\": \"active\"\n                        }\n                    ]\n                }\n            ]\n        ```\n\n        ## Conditions\n\n        **Issue Age**\n        - `time`: One of `minute`, `hour`, `day`, or `week`.\n        - `value`: A positive integer.\n        - `comparisonType`: One of `older` or `newer`.\n        ```json\n            {\n                \"type\": \"age_comparison\",\n                \"comparison\": {\n                    \"time\": \"minute\",\n                    \"value\": 10,\n                    \"comparisonType\": \"older\"\n                },\n                \"conditionResult\": true\n            }\n\n        ```\n\n        **Issue Assignment**\n        - `targetType`: Who the issue is assigned to\n            - `Unassigned`: Unassigned\n            - `Member`: Assigned to a user\n            - `Team`: Assigned to a team\n        - `targetIdentifier`: The ID of the user or team from the `targetType`. Enter \"\" if `targetType` is `Unassigned`.\n        ```json\n            {\n                \"type\": \"assigned_to\",\n                \"comparison\": {\n                    \"targetType\": \"Member\",\n                    \"targetIdentifier\": 123456\n                },\n                \"conditionResult\": true\n            }\n        ```\n\n        **Issue Category**\n        - `value`: The issue category to filter to.\n            - `1`: Error issues\n            - `6`: Feedback issues\n            - `10`: Outage issues\n            - `11`: Metric issues\n            - `12`: DB Query issues\n            - `13`: HTTP Client issues\n            - `14`: Front end issues\n            - `15`: Mobile issues\n            - `17`: Preprod issues\n            - `19`: Configuration issues\n        ```json\n            {\n                \"type\": \"issue_category\",\n                \"comparison\": {\n                    \"value\": 1\n                },\n                \"conditionResult\": true\n            }\n        ```\n\n        **Issue Frequency**\n        - `value`: A positive integer representing how many times the issue has to happen before the alert will fire.\n        ```json\n            {\n                \"type\": \"issue_occurrences\",\n                \"comparison\": {\n                    \"value\": 10\n                },\n                \"conditionResult\": true\n            }\n        ```\n\n        **De-escalation**\n        - `comparison`: The priority threshold the issue must de-escalate below.\n            - `75`: High priority\n            - `50`: Medium priority\n            - `25`: Low priority\n        ```json\n            {\n                \"type\": \"issue_priority_deescalating\",\n                \"comparison\": 75,\n                \"conditionResult\": true\n            }\n        ```\n\n        **Issue Priority**\n        - `comparison`: The priority the issue must be for the alert to fire.\n            - `75`: High priority\n            - `50`: Medium priority\n            - `25`: Low priority\n        ```json\n            {\n                \"type\": \"issue_priority_greater_or_equal\",\n                \"comparison\": 75,\n                \"conditionResult\": true\n            }\n        ```\n\n        **Number of Users Affected**\n        - `value`: A positive integer representing the number of users that must be affected before the alert will fire.\n        - `filters`: A list of additional sub-filters to evaluate before the alert will fire.\n        - `interval`: The time period in which to evaluate the value. e.g. Number of users affected by an issue is more than `value` in `interval`.\n            - `1min`: 1 minute\n            - `5min`: 5 minutes\n            - `15min`: 15 minutes\n            - `1hr`: 1 hour\n            - `1d`: 1 day\n            - `1w`: 1 week\n            - `30d`: 30 days\n        ```json\n            {\n                \"type\": \"event_unique_user_frequency_count\",\n                \"comparison\": {\n                    \"value\": 100,\n                    \"filters\": [{\"key\": \"foo\", \"match\": \"eq\", \"value\": \"bar\"}],\n                    \"interval\": \"1h\"\n                },\n                \"conditionResult\": true\n            }\n        ```\n\n        **Number of Events**\n        - `value`: A positive integer representing the number of events in an issue that must come in before the alert will fire\n        - `interval`: The time period in which to evaluate the value. e.g. Number of events in an issue is more than `value` in `interval`.\n            - `1min`: 1 minute\n            - `5min`: 5 minutes\n            - `15min`: 15 minutes\n            - `1hr`: 1 hour\n            - `1d`: 1 day\n            - `1w`: 1 week\n            - `30d`: 30 days\n        ```json\n            {\n                \"type\": \"event_frequency_count\",\n                \"comparison\": {\n                    \"value\": 100,\n                    \"interval\": \"1h\"\n                },\n                \"conditionResult\": true\n            }\n        ```\n\n        **Percent of Events**\n        - `value`: A positive integer representing the number of events in an issue that must come in before the alert will fire\n        - `interval`: The time period in which to evaluate the value. e.g. Number of events in an issue is `comparisonInterval` percent higher `value` compared to `interval`.\n            - `1min`: 1 minute\n            - `5min`: 5 minutes\n            - `15min`: 15 minutes\n            - `1hr`: 1 hour\n            - `1d`: 1 day\n            - `1w`: 1 week\n            - `30d`: 30 days\n        - `comparisonInterval`: The time period to compare against. See `interval` for options.\n        ```json\n            {\n                \"type\": \"event_frequency_percent\",\n                \"comparison\": {\n                    \"value\": 100,\n                    \"interval\": \"1h\",\n                    \"comparisonInterval\": \"1w\"\n                },\n                \"conditionResult\": true\n            }\n\n        ```\n\n        **Percentage of Sessions Affected Count**\n        - `value`: A positive integer representing the number of events in an issue that must come in before the alert will fire\n        - `interval`: The time period in which to evaluate the value. e.g. Percentage of sessions affected by an issue is more than `value` in `interval`.\n            - `1min`: 1 minute\n            - `5min`: 5 minutes\n            - `15min`: 15 minutes\n            - `1hr`: 1 hour\n            - `1d`: 1 day\n            - `1w`: 1 week\n            - `30d`: 30 days\n        ```json\n            {\n                \"type\": \"percent_sessions_count\",\n                \"comparison\": {\n                    \"value\": 10,\n                    \"interval\": \"1h\"\n                },\n                \"conditionResult\": true\n            }\n        ```\n\n        **Percentage of Sessions Affected Percent**\n        - `value`: A positive integer representing the number of events in an issue that must come in before the alert will fire\n        - `interval`: The time period in which to evaluate the value. e.g. Percentage of sessions affected by an issue is `comparisonInterval` percent higher `value` compared to `interval`.\n            - `1min`: 1 minute\n            - `5min`: 5 minutes\n            - `15min`: 15 minutes\n            - `1hr`: 1 hour\n            - `1d`: 1 day\n            - `1w`: 1 week\n            - `30d`: 30 days\n        - `comparisonInterval`: The time period to compare against. See `interval` for options.\n        ```json\n            {\n                \"type\": \"percent_sessions_percent\",\n                \"comparison\": {\n                    \"value\": 10,\n                    \"interval\": \"1h\"\n                },\n                \"conditionResult\": true\n            }\n        ```\n\n        **Event Attribute**\n        The event's `attribute` value `match` `value`\n\n        - `attribute`: The event attribute to match on. Valid values are: `message`, `platform`, `environment`, `type`, `error.handled`, `error.unhandled`, `error.main_thread`, `exception.type`, `exception.value`, `user.id`, `user.email`, `user.username`, `user.ip_address`, `http.method`, `http.url`, `http.status_code`, `sdk.name`, `stacktrace.code`, `stacktrace.module`, `stacktrace.filename`, `stacktrace.abs_path`, `stacktrace.package`, `unreal.crash_type`, `app.in_foreground`.\n        - `match`: The comparison operator\n            - `co`: Contains\n            - `nc`: Does not contain\n            - `eq`: Equals\n            - `ne`: Does not equal\n            - `sw`: Starts with\n            - `ew`: Ends with\n            - `is`: Is set\n            - `ns`: Is not set\n        - `value`: A string. Not required when match is `is` or `ns`.\n\n        ```json\n            {\n                \"type\": \"event_attribute\",\n                \"comparison\": {\n                    \"match\": \"co\",\n                    \"value\": \"bar\",\n                    \"attribute\": \"message\"\n                },\n                \"conditionResult\": true\n            }\n        ```\n\n        **Tagged Event**\n        The event's tags `key` match `value`\n        - `key`: The tag value\n        - `match`: The comparison operator\n            - `co`: Contains\n            - `nc`: Does not contain\n            - `eq`: Equals\n            - `ne`: Does not equal\n            - `sw`: Starts with\n            - `ew`: Ends with\n            - `is`: Is set\n            - `ns`: Is not set\n        - `value`: A string. Not required when match is `is` or `ns`.\n\n        ```json\n            {\n                \"type\": \"tagged_event\",\n                \"comparison\": {\n                    \"key\": \"level\",\n                    \"match\": \"eq\",\n                    \"value\": \"error\"\n                },\n                \"conditionResult\": true\n            }\n        ```\n\n        **Latest Release**\n        The event is from the latest release\n\n        ```json\n            {\n                \"type\": \"latest_release\",\n                \"comparison\": true,\n                \"conditionResult\": true\n            }\n        ```\n\n        **Release Age**\n        ```json\n            {\n                \"type\": \"latest_adopted_release\",\n                \"comparison\": {\n                    \"environment\": \"production\",\n                    \"ageComparison\": \"older\",\n                    \"releaseAgeType\": \"oldest\"\n                },\n                \"conditionResult\": true\n            }\n        ```\n\n        **Event Level**\n        The event's level is `match` `level`\n        - `match`: The comparison operator\n            - `eq`: Equal\n            - `gte`: Greater than or equal\n            - `lte`: Less than or equal\n        - `level`: The event level\n            - `50`: Fatal\n            - `40`: Error\n            - `30`: Warning\n            - `20`: Info\n            - `10`: Debug\n            - `0`: Sample\n\n        ```json\n            {\n                \"type\": \"level\",\n                \"comparison\": {\n                    \"level\": 50,\n                    \"match\": \"eq\"\n                },\n                \"conditionResult\": true\n            }\n        ```\n\n        ## Actions\n        A list of actions that take place when all required conditions and filters for the alert are met. See below for a list of possible actions.\n\n\n        **Notify on Preferred Channel**\n        - `data`: A dictionary with the fallthrough type option when choosing to notify Suggested Assignees. Leave empty if notifying a user or team.\n            - `fallthroughType`\n                - `ActiveMembers`\n                - `AllMembers`\n                - `NoOne`\n        - `config`: A dictionary with the configuration options for notification.\n            - `targetType`: The type of recipient to notify\n                - `user`: User\n                - `team`: Team\n                - `issue_owners`: Suggested Assignees\n            - `targetDisplay`: null\n            - `targetIdentifier`: The id of the user or team to notify. Leave null for Suggested Assignees.\n\n        ```json\n            {\n                \"type\":\"email\",\n                \"integrationId\":null,\n                \"data\":{},\n                \"config\":{\n                    \"targetType\":\"user\",\n                    \"targetDisplay\":null,\n                    \"targetIdentifier\":\"232692\"\n                },\n                \"status\":\"active\"\n            },\n            {\n                \"type\":\"email\",\n                \"integrationId\":null,\n                \"data\":{\n                    \"fallthroughType\":\"ActiveMembers\"\n                },\n                \"config\":{\n                    \"targetType\":\"issue_owners\",\n                    \"targetDisplay\":null,\n                    \"targetIdentifier\":\"\"}\n                ,\n                \"status\":\"active\"\n            }\n        ```\n        **Notify on Slack**\n        - `targetDisplay`: The name of the channel to notify in.\n        `integrationId`: The stringified ID of the integration.\n\n        ```json\n            {\n                \"type\":\"slack\",\n                \"config\":{\n                    \"targetType\":\"specific\",\n                    \"targetIdentifier\":\"\",\n                    \"targetDisplay\":\"notify-errors\"\n                },\n                \"integrationId\":\"1\",\n                \"data\":{},\n                \"status\":\"active\"\n            }\n        ```\n\n        **Notify on PagerDuty**\n        - `targetDisplay`: The name of the service to create the ticket in.\n        - `integrationId`: The stringified ID of the integration.\n        - `data[\"priority\"]`: The severity level for the notification.\n\n        ```json\n            {\n                \"type\":\"pagerduty\",\n                \"config\":{\n                    \"targetType\":\"specific\",\n                    \"targetIdentifier\":\"123456\",\n                    \"targetDisplay\":\"Error Service\"\n                    },\n                \"integrationId\":\"2345\",\n                \"data\":{\n                    \"priority\":\"default\"\n                },\n                \"status\":\"active\"\n            }\n        ```\n\n        **Notify on Discord**\n        - `targetDisplay`: The name of the service to create the ticket in.\n        - `integrationId`: The stringified ID of the integration.\n        - `data[\"tags\"]`: Comma separated list of tags to add to the notification.\n\n        ```json\n            {\n                \"type\":\"discord\",\n                \"config\":{\n                    \"targetType\":\"specific\",\n                    \"targetIdentifier\":\"12345\",\n                    \"targetDisplay\":\"\",\n                    },\n                \"integrationId\":\"1234\",\n                \"data\":{\n                    \"tags\":\"transaction,environment\"\n                },\n                \"status\":\"active\"\n            }\n        ```\n\n        **Notify on MSTeams**\n        - `targetIdentifier` - The integration ID associated with the Microsoft Teams team.\n        - `targetDisplay` - The name of the channel to send the notification to.\n        - `integrationId`: The stringified ID of the integration.\n        ```json\n            {\n                \"type\":\"msteams\",\n                \"config\":{\n                    \"targetType\":\"specific\",\n                    \"targetIdentifier\":\"19:a4b3kghaghgkjah357y6847@thread.skype\",\n                    \"targetDisplay\":\"notify-errors\"\n                },\n                \"integrationId\":\"1\",\n                \"data\":{},\n                \"status\":\"active\"\n            }\n        ```\n\n        **Notify on OpsGenie**\n        - `targetDisplay`: The name of the Opsgenie team.\n        - `targetIdentifier`: The ID of the Opsgenie team to send the notification to.\n        - `integrationId`: The stringified ID of the integration.\n        - `data[\"priority\"]`: The priority level for the notification.\n\n        ```json\n            {\n                \"type\":\"opsgenie\",\n                \"config\":{\n                    \"targetType\":\"specific\",\n                    \"targetIdentifier\":\"123456-Error-Service\",\n                    \"targetDisplay\":\"Error Service\"\n                    },\n                \"integrationId\":\"2345\",\n                \"data\":{\n                    \"priority\":\"P3\"\n                },\n                \"status\":\"active\"\n            }\n        ```\n\n        **Notify on Azure DevOps**\n        - `integrationId`: The stringified ID of the integration.\n        - `data` - A list of any fields you want to include in the ticket as objects.\n\n        ```json\n            {\n                \"type\":\"vsts\",\n                \"config\":{\n                    \"targetType\":\"specific\",\n                    \"targetIdentifier\":\",\n                    \"targetDisplay\":\"\"\n                    },\n                \"integrationId\":\"2345\",\n                \"data\":{...},\n                \"status\":\"active\"\n            }\n        ```\n\n        **Create a Jira ticket**\n        - `integrationId`: The stringified ID of the integration.\n        - `data` - A list of any fields you want to include in the ticket as objects.\n\n        ```json\n            {\n                \"type\":\"jira\",\n                \"config\":{\n                    \"targetType\":\"specific\",\n                    \"targetIdentifier\":\",\n                    \"targetDisplay\":\"\"\n                    },\n                \"integrationId\":\"2345\",\n                \"data\":{...},\n                \"status\":\"active\"\n            }\n        ```\n\n        **Create a Jira Server ticket**\n        - `integrationId`: The stringified ID of the integration.\n        - `data` - A list of any fields you want to include in the ticket as objects.\n\n        ```json\n            {\n                \"type\":\"jira_server\",\n                \"config\":{\n                    \"targetType\":\"specific\",\n                    \"targetIdentifier\":\",\n                    \"targetDisplay\":\"\"\n                    },\n                \"integrationId\":\"2345\",\n                \"data\":{...},\n                \"status\":\"active\"\n            }\n        ```\n\n        **Create a GitHub issue**\n        - `integrationId`: The stringified ID of the integration.\n        - `data` - A list of any fields you want to include in the ticket as objects.\n\n        ```json\n            {\n                \"type\":\"github\",\n                \"config\":{\n                    \"targetType\":\"specific\",\n                    \"targetIdentifier\":\",\n                    \"targetDisplay\":\"\"\n                    },\n                \"integrationId\":\"2345\",\n                \"data\":{\n                  \"additional_fields\": {\n                      \"assignee\": \"\",\n                      \"integration\": \"2345\",\n                      \"labels\": [],\n                      \"repo\": \"example-repo\",\n                  },\n                  \"dynamic_form_fields\": [\n                      {\n                        \"choices\": [[\"YourOrg/example-repo\", \"example-repo\"]],\n                        \"default\": \"YourOrg/example-repo\",\n                        \"label\": \"GitHub Repository\",\n                        \"name\": \"repo\",\n                        \"required\": true\n                        \"type\": \"select\",\n                        \"updatesForm\": true,\n                        \"url\": \"/extensions/github/search/example-repo/1234567/\",\n                      },\n                  ],\n                },\n                \"status\":\"active\"\n            }\n        ```\n        "
           },
           "owner": {
             "type": "string",
