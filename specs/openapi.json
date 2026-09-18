@@ -3577,8 +3577,7 @@
                   "onlyPrebuilt",
                   "owned",
                   "shared",
-                  "showHidden",
-                  "showUserHidden"
+                  "showHidden"
                 ]
               }
             },
@@ -3914,9 +3913,6 @@
                       "isFavorited": {
                         "type": "boolean"
                       },
-                      "isHidden": {
-                        "type": "boolean"
-                      },
                       "projects": {
                         "type": "array",
                         "items": {
@@ -3935,7 +3931,6 @@
                       "filters",
                       "id",
                       "isFavorited",
-                      "isHidden",
                       "lastVisited",
                       "permissions",
                       "prebuiltId",
@@ -4003,7 +3998,6 @@
                           "teamsWithEditAccess": []
                         },
                         "isFavorited": false,
-                        "isHidden": false,
                         "prebuiltId": null
                       },
                       {
@@ -4055,7 +4049,6 @@
                         "widgetPreview": [],
                         "permissions": null,
                         "isFavorited": false,
-                        "isHidden": false,
                         "prebuiltId": null
                       }
                     ],
@@ -11387,7 +11380,7 @@
     "/api/0/organizations/{organization_id_or_slug}/events/": {
       "get": {
         "operationId": "listOrganizationEvents",
-        "description": "Retrieves explore data for a given organization.\n\n**Note**: This endpoint is intended to get a table of results, and is not for doing a full export of data sent to\nSentry.\n\nThe `field` query parameter determines what fields will be selected in the `data` and `meta` keys of the endpoint response.\n- The `data` key contains a list of results row by row that match the `query` made\n- The `meta` key contains information about the response, including the unit or type of the fields requested",
+        "description": "Retrieves explore data for a given organization.\n\n**Note**: This endpoint is intended to get a table of results, and is not for doing a full export of data sent to\nSentry.\n\nThe `field` query parameter determines what fields will be selected in the `data` and `meta` keys of the endpoint response.\n- The `data` key contains a list of results row by row that match the `query` made\n- The `meta` key contains information about the response, including the unit or type of the fields requested\n- EAP table results may include `meta.routingHint`. Pass this opaque value unchanged as\n  `routing_hint` when fetching item details for a row in this response. It identifies how\n  the table query was routed and is omitted when no hint is available.",
         "summary": "Query Explore Events in Table Format",
         "parameters": [
           {
@@ -11601,6 +11594,9 @@
                         },
                         "bytesScanned": {
                           "type": "integer"
+                        },
+                        "routingHint": {
+                          "type": "string"
                         },
                         "debug_info": {}
                       }
@@ -11875,11 +11871,11 @@
                           "type": "number",
                           "format": "double"
                         },
-                        "annotations": {
+                        "droppedAnnotations": {
                           "type": "array",
                           "items": {
                             "type": "object",
-                            "description": "A system annotation explaining that data over a time range was affected by\nan external factor.",
+                            "description": "One time bucket's volume for a system data-fidelity annotation.",
                             "properties": {
                               "type": {
                                 "enum": [
@@ -11888,6 +11884,9 @@
                                 "type": "string"
                               },
                               "category": {
+                                "type": "string"
+                              },
+                              "outcome": {
                                 "type": "string"
                               },
                               "reason": {
@@ -11901,19 +11900,69 @@
                                 "type": "number",
                                 "format": "double"
                               },
-                              "droppedCount": {
+                              "eventCount": {
                                 "type": "number",
                                 "format": "double"
                               },
-                              "label": {
-                                "type": "string"
+                              "byteSize": {
+                                "type": "number",
+                                "format": "double"
                               }
                             },
                             "required": [
                               "category",
-                              "droppedCount",
                               "end",
-                              "label",
+                              "eventCount",
+                              "outcome",
+                              "reason",
+                              "start",
+                              "type"
+                            ]
+                          }
+                        },
+                        "acceptedAnnotations": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "description": "One time bucket's volume for a system data-fidelity annotation.",
+                            "properties": {
+                              "type": {
+                                "enum": [
+                                  "system"
+                                ],
+                                "type": "string"
+                              },
+                              "category": {
+                                "type": "string"
+                              },
+                              "outcome": {
+                                "type": "string"
+                              },
+                              "reason": {
+                                "type": "string"
+                              },
+                              "start": {
+                                "type": "number",
+                                "format": "double"
+                              },
+                              "end": {
+                                "type": "number",
+                                "format": "double"
+                              },
+                              "eventCount": {
+                                "type": "number",
+                                "format": "double"
+                              },
+                              "byteSize": {
+                                "type": "number",
+                                "format": "double"
+                              }
+                            },
+                            "required": [
+                              "category",
+                              "end",
+                              "eventCount",
+                              "outcome",
                               "reason",
                               "start",
                               "type"
@@ -33583,14 +33632,14 @@
             "name": "data_source",
             "schema": {
               "enum": [
-                "events",
+                "errors",
                 "search_issues",
                 "spans"
               ],
               "type": "string",
               "minLength": 1
             },
-            "description": "The data source to query replays from.\n\n* `events`\n* `search_issues`\n* `spans`",
+            "description": "The data source to query replays from.\n\n* `errors`\n* `search_issues`\n* `spans`",
             "required": true
           },
           {
@@ -71544,7 +71593,7 @@
                   "user_context": {
                     "type": "string",
                     "description": "Optional user context to append to the step prompt.",
-                    "maxLength": 1000
+                    "maxLength": 10000
                   },
                   "repo_name": {
                     "type": "string",
@@ -79299,9 +79348,6 @@
             "isFavorited": {
               "type": "boolean"
             },
-            "isHidden": {
-              "type": "boolean"
-            },
             "projects": {
               "type": "array",
               "items": {
@@ -79320,7 +79366,6 @@
             "filters",
             "id",
             "isFavorited",
-            "isHidden",
             "lastVisited",
             "permissions",
             "prebuiltId",
@@ -82018,7 +82063,7 @@
           "user_context": {
             "type": "string",
             "description": "Optional user context to append to the step prompt.",
-            "maxLength": 1000
+            "maxLength": 10000
           },
           "repo_name": {
             "type": "string",
@@ -95095,6 +95140,9 @@
               "bytesScanned": {
                 "type": "integer"
               },
+              "routingHint": {
+                "type": "string"
+              },
               "debug_info": {}
             }
           }
@@ -95121,11 +95169,11 @@
                 "type": "number",
                 "format": "double"
               },
-              "annotations": {
+              "droppedAnnotations": {
                 "type": "array",
                 "items": {
                   "type": "object",
-                  "description": "A system annotation explaining that data over a time range was affected by\nan external factor.",
+                  "description": "One time bucket's volume for a system data-fidelity annotation.",
                   "properties": {
                     "type": {
                       "enum": [
@@ -95134,6 +95182,9 @@
                       "type": "string"
                     },
                     "category": {
+                      "type": "string"
+                    },
+                    "outcome": {
                       "type": "string"
                     },
                     "reason": {
@@ -95147,19 +95198,69 @@
                       "type": "number",
                       "format": "double"
                     },
-                    "droppedCount": {
+                    "eventCount": {
                       "type": "number",
                       "format": "double"
                     },
-                    "label": {
-                      "type": "string"
+                    "byteSize": {
+                      "type": "number",
+                      "format": "double"
                     }
                   },
                   "required": [
                     "category",
-                    "droppedCount",
                     "end",
-                    "label",
+                    "eventCount",
+                    "outcome",
+                    "reason",
+                    "start",
+                    "type"
+                  ]
+                }
+              },
+              "acceptedAnnotations": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "description": "One time bucket's volume for a system data-fidelity annotation.",
+                  "properties": {
+                    "type": {
+                      "enum": [
+                        "system"
+                      ],
+                      "type": "string"
+                    },
+                    "category": {
+                      "type": "string"
+                    },
+                    "outcome": {
+                      "type": "string"
+                    },
+                    "reason": {
+                      "type": "string"
+                    },
+                    "start": {
+                      "type": "number",
+                      "format": "double"
+                    },
+                    "end": {
+                      "type": "number",
+                      "format": "double"
+                    },
+                    "eventCount": {
+                      "type": "number",
+                      "format": "double"
+                    },
+                    "byteSize": {
+                      "type": "number",
+                      "format": "double"
+                    }
+                  },
+                  "required": [
+                    "category",
+                    "end",
+                    "eventCount",
+                    "outcome",
                     "reason",
                     "start",
                     "type"
