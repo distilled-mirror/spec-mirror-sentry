@@ -12268,11 +12268,12 @@
                       "slack_staging",
                       "perforce",
                       "gitlab",
+                      "cursor_origin",
                       "msteams",
                       "custom_scm"
                     ],
                     "type": "string",
-                    "description": "The provider of the external actor.\n\n* `github`\n* `github_enterprise`\n* `jira_server`\n* `slack`\n* `slack_staging`\n* `perforce`\n* `gitlab`\n* `msteams`\n* `custom_scm`"
+                    "description": "The provider of the external actor.\n\n* `github`\n* `github_enterprise`\n* `jira_server`\n* `slack`\n* `slack_staging`\n* `perforce`\n* `gitlab`\n* `cursor_origin`\n* `msteams`\n* `custom_scm`"
                   },
                   "integration_id": {
                     "type": "integer",
@@ -12473,11 +12474,12 @@
                       "slack_staging",
                       "perforce",
                       "gitlab",
+                      "cursor_origin",
                       "msteams",
                       "custom_scm"
                     ],
                     "type": "string",
-                    "description": "The provider of the external actor.\n\n* `github`\n* `github_enterprise`\n* `jira_server`\n* `slack`\n* `slack_staging`\n* `perforce`\n* `gitlab`\n* `msteams`\n* `custom_scm`"
+                    "description": "The provider of the external actor.\n\n* `github`\n* `github_enterprise`\n* `jira_server`\n* `slack`\n* `slack_staging`\n* `perforce`\n* `gitlab`\n* `cursor_origin`\n* `msteams`\n* `custom_scm`"
                   },
                   "integration_id": {
                     "type": "integer",
@@ -14367,6 +14369,26 @@
                         "type": "boolean",
                         "nullable": true
                       },
+                      "missingFeatures": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "description": "A feature the installation can no longer support, named by the permission\ntier it falls short of, so the update-permissions modal can list them.",
+                          "properties": {
+                            "key": {
+                              "type": "string"
+                            },
+                            "description": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "description",
+                            "key"
+                          ]
+                        },
+                        "nullable": true
+                      },
                       "status": {
                         "type": "string"
                       },
@@ -14396,6 +14418,7 @@
                       "gracePeriodEnd",
                       "icon",
                       "id",
+                      "missingFeatures",
                       "name",
                       "organizationId",
                       "organizationIntegrationStatus",
@@ -14430,6 +14453,7 @@
                           "users:read"
                         ],
                         "outOfDate": false,
+                        "missingFeatures": null,
                         "status": "active",
                         "provider": {
                           "key": "slack",
@@ -14537,6 +14561,26 @@
                       "type": "boolean",
                       "nullable": true
                     },
+                    "missingFeatures": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "description": "A feature the installation can no longer support, named by the permission\ntier it falls short of, so the update-permissions modal can list them.",
+                        "properties": {
+                          "key": {
+                            "type": "string"
+                          },
+                          "description": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "description",
+                          "key"
+                        ]
+                      },
+                      "nullable": true
+                    },
                     "status": {
                       "type": "string"
                     },
@@ -14566,6 +14610,7 @@
                     "gracePeriodEnd",
                     "icon",
                     "id",
+                    "missingFeatures",
                     "name",
                     "organizationId",
                     "organizationIntegrationStatus",
@@ -14598,6 +14643,7 @@
                         "users:read"
                       ],
                       "outOfDate": false,
+                      "missingFeatures": null,
                       "status": "active",
                       "provider": {
                         "key": "slack",
@@ -67166,11 +67212,12 @@
                       "slack_staging",
                       "perforce",
                       "gitlab",
+                      "cursor_origin",
                       "msteams",
                       "custom_scm"
                     ],
                     "type": "string",
-                    "description": "The provider of the external actor.\n\n* `github`\n* `github_enterprise`\n* `jira_server`\n* `slack`\n* `slack_staging`\n* `perforce`\n* `gitlab`\n* `msteams`\n* `custom_scm`"
+                    "description": "The provider of the external actor.\n\n* `github`\n* `github_enterprise`\n* `jira_server`\n* `slack`\n* `slack_staging`\n* `perforce`\n* `gitlab`\n* `cursor_origin`\n* `msteams`\n* `custom_scm`"
                   },
                   "integration_id": {
                     "type": "integer",
@@ -67376,11 +67423,12 @@
                       "slack_staging",
                       "perforce",
                       "gitlab",
+                      "cursor_origin",
                       "msteams",
                       "custom_scm"
                     ],
                     "type": "string",
-                    "description": "The provider of the external actor.\n\n* `github`\n* `github_enterprise`\n* `jira_server`\n* `slack`\n* `slack_staging`\n* `perforce`\n* `gitlab`\n* `msteams`\n* `custom_scm`"
+                    "description": "The provider of the external actor.\n\n* `github`\n* `github_enterprise`\n* `jira_server`\n* `slack`\n* `slack_staging`\n* `perforce`\n* `gitlab`\n* `cursor_origin`\n* `msteams`\n* `custom_scm`"
                   },
                   "integration_id": {
                     "type": "integer",
@@ -75957,6 +76005,26 @@
                         "type": "boolean",
                         "nullable": true
                       },
+                      "missingFeatures": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "description": "A feature the installation can no longer support, named by the permission\ntier it falls short of, so the update-permissions modal can list them.",
+                          "properties": {
+                            "key": {
+                              "type": "string"
+                            },
+                            "description": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "description",
+                            "key"
+                          ]
+                        },
+                        "nullable": true
+                      },
                       "status": {
                         "type": "string"
                       },
@@ -76042,6 +76110,7 @@
                       "externalIssues",
                       "icon",
                       "id",
+                      "missingFeatures",
                       "name",
                       "outOfDate",
                       "provider",
@@ -76152,6 +76221,26 @@
                       "type": "boolean",
                       "nullable": true
                     },
+                    "missingFeatures": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "description": "A feature the installation can no longer support, named by the permission\ntier it falls short of, so the update-permissions modal can list them.",
+                        "properties": {
+                          "key": {
+                            "type": "string"
+                          },
+                          "description": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "description",
+                          "key"
+                        ]
+                      },
+                      "nullable": true
+                    },
                     "status": {
                       "type": "string"
                     },
@@ -76214,6 +76303,7 @@
                     "domainName",
                     "icon",
                     "id",
+                    "missingFeatures",
                     "name",
                     "outOfDate",
                     "provider",
@@ -76231,6 +76321,7 @@
                       "accountType": null,
                       "scopes": null,
                       "outOfDate": null,
+                      "missingFeatures": null,
                       "status": "active",
                       "provider": {
                         "key": "jira",
@@ -76274,6 +76365,7 @@
                       "accountType": null,
                       "scopes": null,
                       "outOfDate": null,
+                      "missingFeatures": null,
                       "status": "active",
                       "provider": {
                         "key": "jira",
@@ -83706,11 +83798,12 @@
               "slack_staging",
               "perforce",
               "gitlab",
+              "cursor_origin",
               "msteams",
               "custom_scm"
             ],
             "type": "string",
-            "description": "The provider of the external actor.\n\n* `github`\n* `github_enterprise`\n* `jira_server`\n* `slack`\n* `slack_staging`\n* `perforce`\n* `gitlab`\n* `msteams`\n* `custom_scm`"
+            "description": "The provider of the external actor.\n\n* `github`\n* `github_enterprise`\n* `jira_server`\n* `slack`\n* `slack_staging`\n* `perforce`\n* `gitlab`\n* `cursor_origin`\n* `msteams`\n* `custom_scm`"
           },
           "integration_id": {
             "type": "integer",
@@ -83750,11 +83843,12 @@
               "slack_staging",
               "perforce",
               "gitlab",
+              "cursor_origin",
               "msteams",
               "custom_scm"
             ],
             "type": "string",
-            "description": "The provider of the external actor.\n\n* `github`\n* `github_enterprise`\n* `jira_server`\n* `slack`\n* `slack_staging`\n* `perforce`\n* `gitlab`\n* `msteams`\n* `custom_scm`"
+            "description": "The provider of the external actor.\n\n* `github`\n* `github_enterprise`\n* `jira_server`\n* `slack`\n* `slack_staging`\n* `perforce`\n* `gitlab`\n* `cursor_origin`\n* `msteams`\n* `custom_scm`"
           },
           "integration_id": {
             "type": "integer",
@@ -86720,6 +86814,26 @@
             "type": "boolean",
             "nullable": true
           },
+          "missingFeatures": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "description": "A feature the installation can no longer support, named by the permission\ntier it falls short of, so the update-permissions modal can list them.",
+              "properties": {
+                "key": {
+                  "type": "string"
+                },
+                "description": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "description",
+                "key"
+              ]
+            },
+            "nullable": true
+          },
           "status": {
             "type": "string"
           },
@@ -86782,6 +86896,7 @@
           "domainName",
           "icon",
           "id",
+          "missingFeatures",
           "name",
           "outOfDate",
           "provider",
@@ -87510,6 +87625,26 @@
               "type": "boolean",
               "nullable": true
             },
+            "missingFeatures": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "description": "A feature the installation can no longer support, named by the permission\ntier it falls short of, so the update-permissions modal can list them.",
+                "properties": {
+                  "key": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "description",
+                  "key"
+                ]
+              },
+              "nullable": true
+            },
             "status": {
               "type": "string"
             },
@@ -87595,6 +87730,7 @@
             "externalIssues",
             "icon",
             "id",
+            "missingFeatures",
             "name",
             "outOfDate",
             "provider",
@@ -90032,6 +90168,26 @@
               "type": "boolean",
               "nullable": true
             },
+            "missingFeatures": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "description": "A feature the installation can no longer support, named by the permission\ntier it falls short of, so the update-permissions modal can list them.",
+                "properties": {
+                  "key": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "description",
+                  "key"
+                ]
+              },
+              "nullable": true
+            },
             "status": {
               "type": "string"
             },
@@ -90061,6 +90217,7 @@
             "gracePeriodEnd",
             "icon",
             "id",
+            "missingFeatures",
             "name",
             "organizationId",
             "organizationIntegrationStatus",
@@ -97836,6 +97993,26 @@
             "type": "boolean",
             "nullable": true
           },
+          "missingFeatures": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "description": "A feature the installation can no longer support, named by the permission\ntier it falls short of, so the update-permissions modal can list them.",
+              "properties": {
+                "key": {
+                  "type": "string"
+                },
+                "description": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "description",
+                "key"
+              ]
+            },
+            "nullable": true
+          },
           "status": {
             "type": "string"
           },
@@ -97865,6 +98042,7 @@
           "gracePeriodEnd",
           "icon",
           "id",
+          "missingFeatures",
           "name",
           "organizationId",
           "organizationIntegrationStatus",
