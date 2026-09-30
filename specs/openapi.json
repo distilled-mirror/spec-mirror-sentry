@@ -2853,6 +2853,9 @@
                                 "type": "string",
                                 "nullable": true
                               },
+                              "llmCalls": {
+                                "type": "integer"
+                              },
                               "inputTokens": {
                                 "type": "integer"
                               },
@@ -2889,6 +2892,7 @@
                               "cacheWriteTokens",
                               "inputCost",
                               "inputTokens",
+                              "llmCalls",
                               "model",
                               "outputCost",
                               "outputTokens",
@@ -2952,6 +2956,7 @@
                         "usageByModel": [
                           {
                             "model": "gpt-4o-mini-2024-07-18",
+                            "llmCalls": 1,
                             "inputTokens": 0,
                             "outputTokens": 0,
                             "totalTokens": 485,
@@ -48554,11 +48559,15 @@
                           },
                           "automaticallyGenerated": {
                             "type": "boolean"
+                          },
+                          "hasCodeOwner": {
+                            "type": "boolean"
                           }
                         },
                         "required": [
                           "automaticallyGenerated",
                           "defaultBranch",
+                          "hasCodeOwner",
                           "id",
                           "integrationId",
                           "projectId",
@@ -48930,11 +48939,15 @@
                         },
                         "automaticallyGenerated": {
                           "type": "boolean"
+                        },
+                        "hasCodeOwner": {
+                          "type": "boolean"
                         }
                       },
                       "required": [
                         "automaticallyGenerated",
                         "defaultBranch",
+                        "hasCodeOwner",
                         "id",
                         "integrationId",
                         "projectId",
@@ -49286,11 +49299,15 @@
                         },
                         "automaticallyGenerated": {
                           "type": "boolean"
+                        },
+                        "hasCodeOwner": {
+                          "type": "boolean"
                         }
                       },
                       "required": [
                         "automaticallyGenerated",
                         "defaultBranch",
+                        "hasCodeOwner",
                         "id",
                         "integrationId",
                         "projectId",
@@ -49662,11 +49679,15 @@
                         },
                         "automaticallyGenerated": {
                           "type": "boolean"
+                        },
+                        "hasCodeOwner": {
+                          "type": "boolean"
                         }
                       },
                       "required": [
                         "automaticallyGenerated",
                         "defaultBranch",
+                        "hasCodeOwner",
                         "id",
                         "integrationId",
                         "projectId",
@@ -62863,6 +62884,14 @@
                       "id": {
                         "type": "string"
                       },
+                      "integrationId": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "externalId": {
+                        "type": "string",
+                        "nullable": true
+                      },
                       "projectId": {
                         "type": "string"
                       },
@@ -62884,7 +62913,9 @@
                       }
                     },
                     "required": [
+                      "externalId",
                       "id",
+                      "integrationId",
                       "projectId",
                       "providerKey",
                       "repoName",
@@ -104610,11 +104641,15 @@
               },
               "automaticallyGenerated": {
                 "type": "boolean"
+              },
+              "hasCodeOwner": {
+                "type": "boolean"
               }
             },
             "required": [
               "automaticallyGenerated",
               "defaultBranch",
+              "hasCodeOwner",
               "id",
               "integrationId",
               "projectId",
@@ -104875,11 +104910,15 @@
                 },
                 "automaticallyGenerated": {
                   "type": "boolean"
+                },
+                "hasCodeOwner": {
+                  "type": "boolean"
                 }
               },
               "required": [
                 "automaticallyGenerated",
                 "defaultBranch",
+                "hasCodeOwner",
                 "id",
                 "integrationId",
                 "projectId",
@@ -106249,6 +106288,14 @@
             "id": {
               "type": "string"
             },
+            "integrationId": {
+              "type": "string",
+              "nullable": true
+            },
+            "externalId": {
+              "type": "string",
+              "nullable": true
+            },
             "projectId": {
               "type": "string"
             },
@@ -106270,7 +106317,9 @@
             }
           },
           "required": [
+            "externalId",
             "id",
+            "integrationId",
             "projectId",
             "providerKey",
             "repoName",
@@ -107544,6 +107593,9 @@
                       "type": "string",
                       "nullable": true
                     },
+                    "llmCalls": {
+                      "type": "integer"
+                    },
                     "inputTokens": {
                       "type": "integer"
                     },
@@ -107580,6 +107632,7 @@
                     "cacheWriteTokens",
                     "inputCost",
                     "inputTokens",
+                    "llmCalls",
                     "model",
                     "outputCost",
                     "outputTokens",
