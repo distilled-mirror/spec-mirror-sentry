@@ -2306,7 +2306,7 @@
     "/api/0/organizations/{organization_id_or_slug}/agents/conversations/": {
       "get": {
         "operationId": "listOrganizationAIConversations",
-        "description": "**Experimental:** This API is under active development and may change.\n\nReturn AI conversations ordered by latest span time.\n\n`query` uses Sentry search syntax.\n\n**Span filters**\n\n- Description: `\"payment failed\"`; status: `span.status:[error,internal_error]`.\n- Operation: `gen_ai.operation.type:tool`; tool: `gen_ai.tool.name:get_weather`.\n- Duration: `span.duration:>2s`; ID: `gen_ai.conversation.id:\"session:123\"`\n  or `conversation.conversationId:\"session:123\"`.\n\n**Conversation filters**\n\n- Calls: `conversation.llmCalls` or `conversation.messages`, and\n  `conversation.toolCalls`; failures: `conversation.errors` and\n  `conversation.toolErrors`.\n- Usage: `conversation.inputTokens`, `conversation.outputTokens`,\n  `conversation.totalTokens`, and `conversation.totalCost`.\n- Duration: `conversation.duration` sums AI spans;\n  `conversation.generationDuration` sums LLM calls.\n\nUse numeric comparisons such as `conversation.toolCalls:>2`. Queries return\nconversations, not spans. Each `AND` condition may match a different span.\nReturned totals include all AI spans in selected project, environment, and time\nfilters, not only matching spans.\n\nNegation means no span matches, including when an attribute is absent. Payloads\nare searchable only when recorded and not scrubbed. Payload failure text does\nnot mark a span as failed; set `span.status:error` for reliable failure search.",
+        "description": "**Experimental:** This API is under active development and may change.\n\nReturn AI conversations ordered by latest span time.\n\n`query` uses Sentry search syntax.\n\n**Span filters**\n\n- Description: `\"payment failed\"`; status: `span.status:[error,internal_error]`.\n- Operation: `gen_ai.operation.type:tool`; tool: `gen_ai.tool.name:get_weather`.\n- Duration: `span.duration:>2s`; ID: `gen_ai.conversation.id:\"session:123\"`\n  or `conversation.conversationId:\"session:123\"`.\n\n**Conversation filters**\n\n- Calls: `conversation.llmCalls` or `conversation.messages`, and\n  `conversation.toolCalls`; failures: `conversation.errors` and\n  `conversation.toolErrors`.\n- Usage: `conversation.inputTokens`, `conversation.outputTokens`,\n  `conversation.totalTokens`, and `conversation.totalCost`.\n- Timespan: `conversation.timeSpan` measures elapsed time between first and last AI spans;\n  `conversation.generationDuration` sums LLM call durations. Both use milliseconds.\n\nUse numeric comparisons such as `conversation.toolCalls:>2`. Queries return\nconversations, not spans. Each `AND` condition may match a different span.\nReturned totals include all AI spans in selected project, environment, and time\nfilters, not only matching spans.\n\nNegation means no span matches, including when an attribute is absent. Payloads\nare searchable only when recorded and not scrubbed. Payload failure text does\nnot mark a span as failed; set `span.status:error` for reliable failure search.",
         "summary": "List an Organization's AI Conversations",
         "parameters": [
           {
@@ -2465,6 +2465,10 @@
                       "conversationId": {
                         "type": "string"
                       },
+                      "timeSpan": {
+                        "type": "number",
+                        "format": "double"
+                      },
                       "title": {
                         "type": "string",
                         "nullable": true
@@ -2564,6 +2568,7 @@
                       "projectId",
                       "projects",
                       "startTimestamp",
+                      "timeSpan",
                       "title",
                       "toolCalls",
                       "toolErrors",
@@ -2602,6 +2607,7 @@
                         "inputTokens": 320,
                         "outputTokens": 165,
                         "totalCost": 0.0042,
+                        "timeSpan": 2500,
                         "generationDuration": 1250.5,
                         "startTimestamp": 1743465600000,
                         "endTimestamp": 1743465602500,
@@ -20218,36 +20224,6 @@
                   "items": {
                     "type": "object",
                     "properties": {
-                      "alertRule": {
-                        "type": "object",
-                        "properties": {
-                          "targets": {
-                            "type": "array",
-                            "items": {
-                              "type": "object",
-                              "properties": {
-                                "targetIdentifier": {
-                                  "type": "integer"
-                                },
-                                "targetType": {
-                                  "type": "string"
-                                }
-                              },
-                              "required": [
-                                "targetIdentifier",
-                                "targetType"
-                              ]
-                            }
-                          },
-                          "environment": {
-                            "type": "string"
-                          }
-                        },
-                        "required": [
-                          "environment",
-                          "targets"
-                        ]
-                      },
                       "id": {
                         "type": "string"
                       },
@@ -21360,50 +21336,6 @@
                   "is_muted": {
                     "type": "boolean",
                     "description": "Disable creation of monitor incidents"
-                  },
-                  "alert_rule": {
-                    "allOf": [
-                      {
-                        "type": "object",
-                        "properties": {
-                          "environment": {
-                            "type": "string",
-                            "nullable": true,
-                            "description": "Name of the environment",
-                            "maxLength": 64
-                          },
-                          "targets": {
-                            "type": "array",
-                            "items": {
-                              "type": "object",
-                              "properties": {
-                                "target_identifier": {
-                                  "type": "integer",
-                                  "description": "ID of target object"
-                                },
-                                "target_type": {
-                                  "enum": [
-                                    "Member",
-                                    "Team"
-                                  ],
-                                  "type": "string",
-                                  "description": "One of [Member, Team]\n\n* `Member`\n* `Team`"
-                                }
-                              },
-                              "required": [
-                                "target_identifier",
-                                "target_type"
-                              ]
-                            },
-                            "description": "Array of dictionaries with information of the user or team to be notified"
-                          }
-                        },
-                        "required": [
-                          "targets"
-                        ]
-                      }
-                    ],
-                    "description": "Alert rule configuration created alongside the monitor."
                   }
                 },
                 "required": [
@@ -21433,36 +21365,6 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "alertRule": {
-                      "type": "object",
-                      "properties": {
-                        "targets": {
-                          "type": "array",
-                          "items": {
-                            "type": "object",
-                            "properties": {
-                              "targetIdentifier": {
-                                "type": "integer"
-                              },
-                              "targetType": {
-                                "type": "string"
-                              }
-                            },
-                            "required": [
-                              "targetIdentifier",
-                              "targetType"
-                            ]
-                          }
-                        },
-                        "environment": {
-                          "type": "string"
-                        }
-                      },
-                      "required": [
-                        "environment",
-                        "targets"
-                      ]
-                    },
                     "id": {
                       "type": "string"
                     },
@@ -21921,36 +21823,6 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "alertRule": {
-                      "type": "object",
-                      "properties": {
-                        "targets": {
-                          "type": "array",
-                          "items": {
-                            "type": "object",
-                            "properties": {
-                              "targetIdentifier": {
-                                "type": "integer"
-                              },
-                              "targetType": {
-                                "type": "string"
-                              }
-                            },
-                            "required": [
-                              "targetIdentifier",
-                              "targetType"
-                            ]
-                          }
-                        },
-                        "environment": {
-                          "type": "string"
-                        }
-                      },
-                      "required": [
-                        "environment",
-                        "targets"
-                      ]
-                    },
                     "id": {
                       "type": "string"
                     },
@@ -23071,50 +22943,6 @@
                   "is_muted": {
                     "type": "boolean",
                     "description": "Disable creation of monitor incidents"
-                  },
-                  "alert_rule": {
-                    "allOf": [
-                      {
-                        "type": "object",
-                        "properties": {
-                          "environment": {
-                            "type": "string",
-                            "nullable": true,
-                            "description": "Name of the environment",
-                            "maxLength": 64
-                          },
-                          "targets": {
-                            "type": "array",
-                            "items": {
-                              "type": "object",
-                              "properties": {
-                                "target_identifier": {
-                                  "type": "integer",
-                                  "description": "ID of target object"
-                                },
-                                "target_type": {
-                                  "enum": [
-                                    "Member",
-                                    "Team"
-                                  ],
-                                  "type": "string",
-                                  "description": "One of [Member, Team]\n\n* `Member`\n* `Team`"
-                                }
-                              },
-                              "required": [
-                                "target_identifier",
-                                "target_type"
-                              ]
-                            },
-                            "description": "Array of dictionaries with information of the user or team to be notified"
-                          }
-                        },
-                        "required": [
-                          "targets"
-                        ]
-                      }
-                    ],
-                    "description": "Alert rule configuration created alongside the monitor."
                   }
                 },
                 "required": [
@@ -23143,36 +22971,6 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "alertRule": {
-                      "type": "object",
-                      "properties": {
-                        "targets": {
-                          "type": "array",
-                          "items": {
-                            "type": "object",
-                            "properties": {
-                              "targetIdentifier": {
-                                "type": "integer"
-                              },
-                              "targetType": {
-                                "type": "string"
-                              }
-                            },
-                            "required": [
-                              "targetIdentifier",
-                              "targetType"
-                            ]
-                          }
-                        },
-                        "environment": {
-                          "type": "string"
-                        }
-                      },
-                      "required": [
-                        "environment",
-                        "targets"
-                      ]
-                    },
                     "id": {
                       "type": "string"
                     },
@@ -40099,6 +39897,141 @@
         }
       }
     },
+    "/api/0/organizations/{organization_id_or_slug}/starred-service-spans/": {
+      "post": {
+        "operationId": "starOrganizationServiceSpan",
+        "description": "**Experimental:** This API is under active development and may change.\n\nStar a service span for the requesting user. Span queries expose this as the\n`is_starred_transaction` field. Returns `403` if the user has already starred\nthe service span.",
+        "summary": "Star a Service Span",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "organization_id_or_slug",
+            "schema": {
+              "type": "string"
+            },
+            "description": "The ID or slug of the organization the resource belongs to.",
+            "required": true
+          }
+        ],
+        "tags": [
+          "Explore"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "service_span": {
+                    "type": "string",
+                    "description": "The name of the service span to star or unstar."
+                  },
+                  "project_id": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "description": "The ID of the project the service span belongs to."
+                  }
+                },
+                "required": [
+                  "project_id",
+                  "service_span"
+                ]
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "auth_token": [
+              "member:read",
+              "member:write"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        },
+        "x-sentry-experimental": true
+      },
+      "delete": {
+        "operationId": "unstarOrganizationServiceSpan",
+        "description": "**Experimental:** This API is under active development and may change.\n\nUnstar a service span for the requesting user. Succeeds even if the\nservice span was not starred.",
+        "summary": "Unstar a Service Span",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "organization_id_or_slug",
+            "schema": {
+              "type": "string"
+            },
+            "description": "The ID or slug of the organization the resource belongs to.",
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "service_span",
+            "schema": {
+              "type": "string"
+            },
+            "description": "The name of the service span to unstar.",
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "project_id",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "The ID of the project the service span belongs to.",
+            "required": true
+          }
+        ],
+        "tags": [
+          "Explore"
+        ],
+        "security": [
+          {
+            "auth_token": [
+              "member:read",
+              "member:write"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        },
+        "x-sentry-experimental": true
+      }
+    },
     "/api/0/organizations/{organization_id_or_slug}/stats-summary/": {
       "get": {
         "operationId": "getOrganizationStatsSummary",
@@ -56915,36 +56848,6 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "alertRule": {
-                      "type": "object",
-                      "properties": {
-                        "targets": {
-                          "type": "array",
-                          "items": {
-                            "type": "object",
-                            "properties": {
-                              "targetIdentifier": {
-                                "type": "integer"
-                              },
-                              "targetType": {
-                                "type": "string"
-                              }
-                            },
-                            "required": [
-                              "targetIdentifier",
-                              "targetType"
-                            ]
-                          }
-                        },
-                        "environment": {
-                          "type": "string"
-                        }
-                      },
-                      "required": [
-                        "environment",
-                        "targets"
-                      ]
-                    },
                     "id": {
                       "type": "string"
                     },
@@ -58074,50 +57977,6 @@
                   "is_muted": {
                     "type": "boolean",
                     "description": "Disable creation of monitor incidents"
-                  },
-                  "alert_rule": {
-                    "allOf": [
-                      {
-                        "type": "object",
-                        "properties": {
-                          "environment": {
-                            "type": "string",
-                            "nullable": true,
-                            "description": "Name of the environment",
-                            "maxLength": 64
-                          },
-                          "targets": {
-                            "type": "array",
-                            "items": {
-                              "type": "object",
-                              "properties": {
-                                "target_identifier": {
-                                  "type": "integer",
-                                  "description": "ID of target object"
-                                },
-                                "target_type": {
-                                  "enum": [
-                                    "Member",
-                                    "Team"
-                                  ],
-                                  "type": "string",
-                                  "description": "One of [Member, Team]\n\n* `Member`\n* `Team`"
-                                }
-                              },
-                              "required": [
-                                "target_identifier",
-                                "target_type"
-                              ]
-                            },
-                            "description": "Array of dictionaries with information of the user or team to be notified"
-                          }
-                        },
-                        "required": [
-                          "targets"
-                        ]
-                      }
-                    ],
-                    "description": "Alert rule configuration created alongside the monitor."
                   }
                 },
                 "required": [
@@ -58146,36 +58005,6 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "alertRule": {
-                      "type": "object",
-                      "properties": {
-                        "targets": {
-                          "type": "array",
-                          "items": {
-                            "type": "object",
-                            "properties": {
-                              "targetIdentifier": {
-                                "type": "integer"
-                              },
-                              "targetType": {
-                                "type": "string"
-                              }
-                            },
-                            "required": [
-                              "targetIdentifier",
-                              "targetType"
-                            ]
-                          }
-                        },
-                        "environment": {
-                          "type": "string"
-                        }
-                      },
-                      "required": [
-                        "environment",
-                        "targets"
-                      ]
-                    },
                     "id": {
                       "type": "string"
                     },
@@ -92813,6 +92642,10 @@
             "conversationId": {
               "type": "string"
             },
+            "timeSpan": {
+              "type": "number",
+              "format": "double"
+            },
             "title": {
               "type": "string",
               "nullable": true
@@ -92912,6 +92745,7 @@
             "projectId",
             "projects",
             "startTimestamp",
+            "timeSpan",
             "title",
             "toolCalls",
             "toolErrors",
@@ -97338,36 +97172,6 @@
       "Monitor": {
         "type": "object",
         "properties": {
-          "alertRule": {
-            "type": "object",
-            "properties": {
-              "targets": {
-                "type": "array",
-                "items": {
-                  "type": "object",
-                  "properties": {
-                    "targetIdentifier": {
-                      "type": "integer"
-                    },
-                    "targetType": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "targetIdentifier",
-                    "targetType"
-                  ]
-                }
-              },
-              "environment": {
-                "type": "string"
-              }
-            },
-            "required": [
-              "environment",
-              "targets"
-            ]
-          },
           "id": {
             "type": "string"
           },
@@ -97750,101 +97554,11 @@
           "status"
         ]
       },
-      "MonitorAlertRuleTargetValidator": {
-        "type": "object",
-        "properties": {
-          "target_identifier": {
-            "type": "integer",
-            "description": "ID of target object"
-          },
-          "target_type": {
-            "enum": [
-              "Member",
-              "Team"
-            ],
-            "type": "string",
-            "description": "One of [Member, Team]\n\n* `Member`\n* `Team`"
-          }
-        },
-        "required": [
-          "target_identifier",
-          "target_type"
-        ]
-      },
-      "MonitorAlertRuleValidator": {
-        "type": "object",
-        "properties": {
-          "environment": {
-            "type": "string",
-            "nullable": true,
-            "description": "Name of the environment",
-            "maxLength": 64
-          },
-          "targets": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "target_identifier": {
-                  "type": "integer",
-                  "description": "ID of target object"
-                },
-                "target_type": {
-                  "enum": [
-                    "Member",
-                    "Team"
-                  ],
-                  "type": "string",
-                  "description": "One of [Member, Team]\n\n* `Member`\n* `Team`"
-                }
-              },
-              "required": [
-                "target_identifier",
-                "target_type"
-              ]
-            },
-            "description": "Array of dictionaries with information of the user or team to be notified"
-          }
-        },
-        "required": [
-          "targets"
-        ]
-      },
       "MonitorList": {
         "type": "array",
         "items": {
           "type": "object",
           "properties": {
-            "alertRule": {
-              "type": "object",
-              "properties": {
-                "targets": {
-                  "type": "array",
-                  "items": {
-                    "type": "object",
-                    "properties": {
-                      "targetIdentifier": {
-                        "type": "integer"
-                      },
-                      "targetType": {
-                        "type": "string"
-                      }
-                    },
-                    "required": [
-                      "targetIdentifier",
-                      "targetType"
-                    ]
-                  }
-                },
-                "environment": {
-                  "type": "string"
-                }
-              },
-              "required": [
-                "environment",
-                "targets"
-              ]
-            },
             "id": {
               "type": "string"
             },
@@ -98921,50 +98635,6 @@
           "is_muted": {
             "type": "boolean",
             "description": "Disable creation of monitor incidents"
-          },
-          "alert_rule": {
-            "allOf": [
-              {
-                "type": "object",
-                "properties": {
-                  "environment": {
-                    "type": "string",
-                    "nullable": true,
-                    "description": "Name of the environment",
-                    "maxLength": 64
-                  },
-                  "targets": {
-                    "type": "array",
-                    "items": {
-                      "type": "object",
-                      "properties": {
-                        "target_identifier": {
-                          "type": "integer",
-                          "description": "ID of target object"
-                        },
-                        "target_type": {
-                          "enum": [
-                            "Member",
-                            "Team"
-                          ],
-                          "type": "string",
-                          "description": "One of [Member, Team]\n\n* `Member`\n* `Team`"
-                        }
-                      },
-                      "required": [
-                        "target_identifier",
-                        "target_type"
-                      ]
-                    },
-                    "description": "Array of dictionaries with information of the user or team to be notified"
-                  }
-                },
-                "required": [
-                  "targets"
-                ]
-              }
-            ],
-            "description": "Alert rule configuration created alongside the monitor."
           }
         },
         "required": [
@@ -112286,6 +111956,24 @@
           "release_has_some_artifact",
           "sdk_debug_id_support",
           "sdk_version"
+        ]
+      },
+      "StarSegment": {
+        "type": "object",
+        "properties": {
+          "service_span": {
+            "type": "string",
+            "description": "The name of the service span to star or unstar."
+          },
+          "project_id": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "The ID of the project the service span belongs to."
+          }
+        },
+        "required": [
+          "project_id",
+          "service_span"
         ]
       },
       "StatusDetailsValidator": {
