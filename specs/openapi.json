@@ -8372,12 +8372,12 @@
                   "data_sources": {
                     "type": "array",
                     "items": {},
-                    "description": "\n            The data sources for the monitor to use based on what you want to measure.\n\n            **Number of Errors Metric Monitor**\n            - `eventTypes`: Any of `error` or `default`.\n            ```json\n                [\n                    {\n                        \"aggregate\": \"count()\",\n                        \"dataset\" : \"events\",\n                        \"environment\": \"prod\",\n                        \"eventTypes\": [\"default\", \"error\"],\n                        \"query\": \"is:unresolved\",\n                        \"queryType\": 0,\n                        \"timeWindow\": 3600,\n                    },\n                ],\n            ```\n\n            **Users Experiencing Errors Metric Monitor**\n            - `eventTypes`: Any of `error` or `default`.\n            ```json\n                [\n                    {\n                        \"aggregate\": \"count_unique(tags[sentry:user])\",\n                        \"dataset\" : \"events\",\n                        \"environment\": \"prod\",\n                        \"eventTypes\": [\"default\", \"error\"],\n                        \"query\": \"is:unresolved\",\n                        \"queryType\": 0,\n                        \"timeWindow\": 3600,\n                    },\n                ],\n            ```\n\n\n            **Throughput Metric Monitor**\n            ```json\n                [\n                    {\n                        \"aggregate\":\"count(span.duration)\",\n                        \"dataset\":\"events_analytics_platform\",\n                        \"environment\":\"prod\",\n                        \"eventTypes\":[\"trace_item_span\"]\n                        \"query\":\"\",\n                        \"queryType\":1,\n                        \"timeWindow\":3600,\n                        \"extrapolationMode\":\"unknown\",\n                    },\n                ],\n            ```\n\n            **Duration Metric Monitor**\n            ```json\n                [\n                    {\n                        \"aggregate\":\"p95(span.duration)\",\n                        \"dataset\":\"events_analytics_platform\",\n                        \"environment\":\"prod\",\n                        \"eventTypes\":[\"trace_item_span\"]\n                        \"query\":\"\",\n                        \"queryType\":1,\n                        \"timeWindow\":3600,\n                        \"extrapolationMode\":\"unknown\",\n                    },\n                ],\n            ```\n\n            **Failure Rate Metric Monitor**\n            ```json\n                [\n                    {\n                        \"aggregate\":\"failure_rate()\",\n                        \"dataset\":\"events_analytics_platform\",\n                        \"environment\":\"prod\",\n                        \"eventTypes\":[\"trace_item_span\"]\n                        \"query\":\"\",\n                        \"queryType\":1,\n                        \"timeWindow\":3600,\n                        \"extrapolationMode\":\"unknown\",\n                    },\n                ],\n            ```\n\n            **Largest Contentful Paint Metric Monitor**\n            - `dataset`: If a custom percentile is used, dataset is `transactions`. Otherwise, dataset is `events_analytics_platform`.\n            - `aggregate`: Valid values are `avg(measurements.lcp)`, `p50(measurements.lcp)`, `p75(measurements.lcp)`, `p95(measurements.lcp)`, `p99(measurements.lcp)`, `p100(measurements.lcp)`, and `percentile(measurements.lcp,x)`, where `x` is your custom percentile.\n\n            ```json\n                [\n                    {\n                        \"aggregate\":\"p95(measurements.lcp)\",\n                        \"dataset\":\"events_analytics_platform\",\n                        \"environment\":\"prod\",\n                        \"eventTypes\":[\"trace_item_span\"]\n                        \"query\":\"\",\n                        \"queryType\":1,\n                        \"timeWindow\":3600,\n                        \"extrapolationMode\":\"unknown\",\n                    },\n                ],\n            ```\n\n            **Custom Metric Monitor**\n            - `dataset`: If a custom percentile is used, dataset is `transactions`. Otherwise, dataset is `events_analytics_platform`.\n            - `aggregate`: Valid values are:\n            `avg(x)`, where `x` is `transaction.duration`, `measurements.cls`, `measurements.fcp`, `measurements.fid`, `measurements.fp`, `measurements.lcp`, `measurements.ttfb`, or `measurements.ttfb.requesttime`.\n            `p50(x)`, where `x` is `transaction.duration`, `measurements.cls`, `measurements.fcp`, `measurements.fid`, `measurements.fp`, `measurements.lcp`, `measurements.ttfb`, or `measurements.ttfb.requesttime`.\n            `p75(x)`, where x is `transaction.duration`, `measurements.cls`, `measurements.fcp`, `measurements.fid`, `measurements.fp`, `measurements.lcp`, `measurements.ttfb`, or `measurements.ttfb.requesttime`.\n            `p95(x)`, where x is `transaction.duration`, `measurements.cls`, `measurements.fcp`, `measurements.fid`, `measurements.fp`, `measurements.lcp`, `measurements.ttfb`, or `measurements.ttfb.requesttime`.\n            `p99(x)`, where x is `transaction.duration`, `measurements.cls`, `measurements.fcp`, `measurements.fid`, `measurements.fp`, `measurements.lcp`, `measurements.ttfb`, or `measurements.ttfb.requesttime`.\n            `p100(x)`, where `x` is `transaction.duration`, `measurements.cls`, `measurements.fcp`, `measurements.fid`, `measurements.fp`, `measurements.lcp`, `measurements.ttfb`, or `measurements.ttfb.requesttime`.\n            `percentile(x,y)`, where `x` is `transaction.duration`, `measurements.cls`, `measurements.fcp`, `measurements.fid`, `measurements.fp`, `measurements.lcp`, `measurements.ttfb`, or `measurements.ttfb.requesttime`, and `y` is the custom percentile.\n            `failure_rate()`\n            `apdex(x)`, where `x` is the value of the Apdex score.\n            `count()`\n\n            ```json\n            [\n                {\n                    \"aggregate\": \"p75(measurements.ttfb)\"\n                    \"dataset\": \"events_analytics_platform\",\n                    \"queryType\": 1,\n                },\n            ],\n"
+                    "description": "\n            The data sources for the metric monitor to use based on what you want to measure.\n\n            `timeWindow` is measured in seconds. Cron Monitors use schedules instead of this field.\n            Legacy metric alert rules expressed this value in minutes, so multiply a legacy value\n            by 60 when migrating it to a monitor. For example, a legacy 5-minute window becomes\n            `\"timeWindow\": 300`.\n\n            **Number of Errors Metric Monitor**\n            - `eventTypes`: Any of `error` or `default`.\n            ```json\n                [\n                    {\n                        \"aggregate\": \"count()\",\n                        \"dataset\" : \"events\",\n                        \"environment\": \"prod\",\n                        \"eventTypes\": [\"default\", \"error\"],\n                        \"query\": \"is:unresolved\",\n                        \"queryType\": 0,\n                        \"timeWindow\": 3600\n                    }\n                ]\n            ```\n\n            **Users Experiencing Errors Metric Monitor**\n            - `eventTypes`: Any of `error` or `default`.\n            ```json\n                [\n                    {\n                        \"aggregate\": \"count_unique(tags[sentry:user])\",\n                        \"dataset\" : \"events\",\n                        \"environment\": \"prod\",\n                        \"eventTypes\": [\"default\", \"error\"],\n                        \"query\": \"is:unresolved\",\n                        \"queryType\": 0,\n                        \"timeWindow\": 3600\n                    }\n                ]\n            ```\n\n\n            **Throughput Metric Monitor**\n            ```json\n                [\n                    {\n                        \"aggregate\":\"count(span.duration)\",\n                        \"dataset\":\"events_analytics_platform\",\n                        \"environment\":\"prod\",\n                        \"eventTypes\":[\"trace_item_span\"],\n                        \"query\":\"\",\n                        \"queryType\":1,\n                        \"timeWindow\":3600,\n                        \"extrapolationMode\":\"unknown\"\n                    }\n                ]\n            ```\n\n            **Duration Metric Monitor**\n            ```json\n                [\n                    {\n                        \"aggregate\":\"p95(span.duration)\",\n                        \"dataset\":\"events_analytics_platform\",\n                        \"environment\":\"prod\",\n                        \"eventTypes\":[\"trace_item_span\"],\n                        \"query\":\"\",\n                        \"queryType\":1,\n                        \"timeWindow\":3600,\n                        \"extrapolationMode\":\"unknown\"\n                    }\n                ]\n            ```\n\n            **Failure Rate Metric Monitor**\n            ```json\n                [\n                    {\n                        \"aggregate\":\"failure_rate()\",\n                        \"dataset\":\"events_analytics_platform\",\n                        \"environment\":\"prod\",\n                        \"eventTypes\":[\"trace_item_span\"],\n                        \"query\":\"\",\n                        \"queryType\":1,\n                        \"timeWindow\":3600,\n                        \"extrapolationMode\":\"unknown\"\n                    }\n                ]\n            ```\n\n            **Largest Contentful Paint Metric Monitor**\n            - `dataset`: Use `events_analytics_platform`. To query transaction spans, add `is_transaction:true` to `query`.\n            - `aggregate`: Valid values are `avg(measurements.lcp)`, `p50(measurements.lcp)`, `p75(measurements.lcp)`, `p95(measurements.lcp)`, `p99(measurements.lcp)`, `p100(measurements.lcp)`, and `percentile(measurements.lcp,x)`, where `x` is your custom percentile.\n\n            ```json\n                [\n                    {\n                        \"aggregate\":\"p95(measurements.lcp)\",\n                        \"dataset\":\"events_analytics_platform\",\n                        \"environment\":\"prod\",\n                        \"eventTypes\":[\"trace_item_span\"],\n                        \"query\":\"is_transaction:true\",\n                        \"queryType\":1,\n                        \"timeWindow\":3600,\n                        \"extrapolationMode\":\"unknown\"\n                    }\n                ]\n            ```\n\n            **Custom Metric Monitor**\n            - `dataset`: Use `events_analytics_platform`. To query transaction spans, add `is_transaction:true` to `query`.\n            - `aggregate`: Valid values are:\n            `avg(x)`, where `x` is `transaction.duration`, `measurements.cls`, `measurements.fcp`, `measurements.fid`, `measurements.fp`, `measurements.lcp`, `measurements.ttfb`, or `measurements.ttfb.requesttime`.\n            `p50(x)`, where `x` is `transaction.duration`, `measurements.cls`, `measurements.fcp`, `measurements.fid`, `measurements.fp`, `measurements.lcp`, `measurements.ttfb`, or `measurements.ttfb.requesttime`.\n            `p75(x)`, where x is `transaction.duration`, `measurements.cls`, `measurements.fcp`, `measurements.fid`, `measurements.fp`, `measurements.lcp`, `measurements.ttfb`, or `measurements.ttfb.requesttime`.\n            `p95(x)`, where x is `transaction.duration`, `measurements.cls`, `measurements.fcp`, `measurements.fid`, `measurements.fp`, `measurements.lcp`, `measurements.ttfb`, or `measurements.ttfb.requesttime`.\n            `p99(x)`, where x is `transaction.duration`, `measurements.cls`, `measurements.fcp`, `measurements.fid`, `measurements.fp`, `measurements.lcp`, `measurements.ttfb`, or `measurements.ttfb.requesttime`.\n            `p100(x)`, where `x` is `transaction.duration`, `measurements.cls`, `measurements.fcp`, `measurements.fid`, `measurements.fp`, `measurements.lcp`, `measurements.ttfb`, or `measurements.ttfb.requesttime`.\n            `percentile(x,y)`, where `x` is `transaction.duration`, `measurements.cls`, `measurements.fcp`, `measurements.fid`, `measurements.fp`, `measurements.lcp`, `measurements.ttfb`, or `measurements.ttfb.requesttime`, and `y` is the custom percentile.\n            `failure_rate()`\n            `apdex(x)`, where `x` is the value of the Apdex score.\n            `count()`\n\n            ```json\n            [\n                {\n                    \"aggregate\": \"p75(measurements.ttfb)\",\n                    \"dataset\": \"events_analytics_platform\",\n                    \"environment\": \"prod\",\n                    \"queryType\": 1,\n                    \"eventTypes\": [\"trace_item_span\"],\n                    \"query\": \"is_transaction:true\",\n                    \"timeWindow\": 3600,\n                    \"extrapolationMode\": \"unknown\"\n                }\n            ]\n            ```\n"
                   },
                   "config": {
                     "type": "object",
                     "additionalProperties": {},
-                    "description": "\n            The issue detection type configuration.\n\n\n            - `detectionType`\n                - `static`: Threshold based monitor\n                - `percent`: Change based monitor\n                - `dynamic`: Dynamic monitor\n            - `comparisonDelta`: If selecting a **change** detection type, the comparison delta is the time period at which to compare against in minutes.\n            For example, a value of 3600 compares the metric tracked against data 1 hour ago.\n                - `300`: 5 minutes\n                - `900`: 15 minutes\n                - `3600`: 1 hour\n                - `86400`: 1 day\n                - `604800`: 1 week\n                - `2592000`: 1 month\n\n            **Threshold**\n            ```json\n            {\n                \"detectionType\": \"static\",\n            }\n            ```\n            **Change**\n            ```json\n            {\n                \"detectionType\": \"percent\",\n                \"comparisonDelta\": 3600,\n            }\n            ```\n            **Dynamic**\n            ```json\n            {\n                \"detectionType\": \"dynamic\",\n            }\n            ```\n        "
+                    "description": "\n            The issue detection type configuration.\n\n\n            - `detectionType`\n                - `static`: Threshold based monitor\n                - `percent`: Change based monitor\n                - `dynamic`: Dynamic monitor\n            - `comparisonDelta`: If selecting a **change** detection type, the comparison delta is the time period, in seconds, at which to compare against historical data.\n            For example, a value of 3600 compares the metric tracked against data 1 hour ago.\n                - `300`: 5 minutes\n                - `900`: 15 minutes\n                - `3600`: 1 hour\n                - `86400`: 1 day\n                - `604800`: 1 week\n                - `2592000`: 1 month\n\n            **Threshold**\n            ```json\n            {\n                \"detectionType\": \"static\"\n            }\n            ```\n            **Change**\n            ```json\n            {\n                \"detectionType\": \"percent\",\n                \"comparisonDelta\": 3600\n            }\n            ```\n            **Dynamic**\n            ```json\n            {\n                \"detectionType\": \"dynamic\"\n            }\n            ```\n        "
                   },
                   "condition_group": {
                     "allOf": [
@@ -15491,6 +15491,184 @@
             "description": "Not Found"
           }
         }
+      }
+    },
+    "/api/0/organizations/{organization_id_or_slug}/integrations/{integration_id}/channel-validate/": {
+      "get": {
+        "operationId": "validateOrganizationIntegrationChannel",
+        "description": "**Experimental:** This API is under active development and may change.\n\nValidate whether a channel exists for the given integration.",
+        "summary": "Validate a Messaging Channel for an Integration",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "organization_id_or_slug",
+            "schema": {
+              "type": "string"
+            },
+            "description": "The ID or slug of the organization the resource belongs to.",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "integration_id",
+            "schema": {
+              "type": "string"
+            },
+            "description": "The ID of the integration installed on the organization.",
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "channel",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "required": true
+          }
+        ],
+        "tags": [
+          "Integration"
+        ],
+        "security": [
+          {
+            "auth_token": [
+              "org:admin",
+              "org:integrations",
+              "org:read",
+              "org:write"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    },
+                    "valid": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "valid"
+                  ]
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        },
+        "x-sentry-experimental": true
+      }
+    },
+    "/api/0/organizations/{organization_id_or_slug}/integrations/{integration_id}/channels/": {
+      "get": {
+        "operationId": "listOrganizationIntegrationChannels",
+        "description": "**Experimental:** This API is under active development and may change.\n\nList all messaging channels for an integration.",
+        "summary": "List Messaging Channels for an Integration",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "organization_id_or_slug",
+            "schema": {
+              "type": "string"
+            },
+            "description": "The ID or slug of the organization the resource belongs to.",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "integration_id",
+            "schema": {
+              "type": "string"
+            },
+            "description": "The ID of the integration installed on the organization.",
+            "required": true
+          }
+        ],
+        "tags": [
+          "Integration"
+        ],
+        "security": [
+          {
+            "auth_token": [
+              "org:admin",
+              "org:integrations",
+              "org:read",
+              "org:write"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "warning": {
+                      "type": "string"
+                    },
+                    "results": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "display": {
+                            "type": "string"
+                          },
+                          "type": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "display",
+                          "id",
+                          "name",
+                          "type"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "results"
+                  ]
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        },
+        "x-sentry-experimental": true
       }
     },
     "/api/0/organizations/{organization_id_or_slug}/integrations/{integration_id}/repos/": {
@@ -28577,12 +28755,12 @@
                   "data_sources": {
                     "type": "array",
                     "items": {},
-                    "description": "\n            The data sources for the monitor to use based on what you want to measure.\n\n            **Number of Errors Metric Monitor**\n            - `eventTypes`: Any of `error` or `default`.\n            ```json\n                [\n                    {\n                        \"aggregate\": \"count()\",\n                        \"dataset\" : \"events\",\n                        \"environment\": \"prod\",\n                        \"eventTypes\": [\"default\", \"error\"],\n                        \"query\": \"is:unresolved\",\n                        \"queryType\": 0,\n                        \"timeWindow\": 3600,\n                    },\n                ],\n            ```\n\n            **Users Experiencing Errors Metric Monitor**\n            - `eventTypes`: Any of `error` or `default`.\n            ```json\n                [\n                    {\n                        \"aggregate\": \"count_unique(tags[sentry:user])\",\n                        \"dataset\" : \"events\",\n                        \"environment\": \"prod\",\n                        \"eventTypes\": [\"default\", \"error\"],\n                        \"query\": \"is:unresolved\",\n                        \"queryType\": 0,\n                        \"timeWindow\": 3600,\n                    },\n                ],\n            ```\n\n\n            **Throughput Metric Monitor**\n            ```json\n                [\n                    {\n                        \"aggregate\":\"count(span.duration)\",\n                        \"dataset\":\"events_analytics_platform\",\n                        \"environment\":\"prod\",\n                        \"eventTypes\":[\"trace_item_span\"]\n                        \"query\":\"\",\n                        \"queryType\":1,\n                        \"timeWindow\":3600,\n                        \"extrapolationMode\":\"unknown\",\n                    },\n                ],\n            ```\n\n            **Duration Metric Monitor**\n            ```json\n                [\n                    {\n                        \"aggregate\":\"p95(span.duration)\",\n                        \"dataset\":\"events_analytics_platform\",\n                        \"environment\":\"prod\",\n                        \"eventTypes\":[\"trace_item_span\"]\n                        \"query\":\"\",\n                        \"queryType\":1,\n                        \"timeWindow\":3600,\n                        \"extrapolationMode\":\"unknown\",\n                    },\n                ],\n            ```\n\n            **Failure Rate Metric Monitor**\n            ```json\n                [\n                    {\n                        \"aggregate\":\"failure_rate()\",\n                        \"dataset\":\"events_analytics_platform\",\n                        \"environment\":\"prod\",\n                        \"eventTypes\":[\"trace_item_span\"]\n                        \"query\":\"\",\n                        \"queryType\":1,\n                        \"timeWindow\":3600,\n                        \"extrapolationMode\":\"unknown\",\n                    },\n                ],\n            ```\n\n            **Largest Contentful Paint Metric Monitor**\n            - `dataset`: If a custom percentile is used, dataset is `transactions`. Otherwise, dataset is `events_analytics_platform`.\n            - `aggregate`: Valid values are `avg(measurements.lcp)`, `p50(measurements.lcp)`, `p75(measurements.lcp)`, `p95(measurements.lcp)`, `p99(measurements.lcp)`, `p100(measurements.lcp)`, and `percentile(measurements.lcp,x)`, where `x` is your custom percentile.\n\n            ```json\n                [\n                    {\n                        \"aggregate\":\"p95(measurements.lcp)\",\n                        \"dataset\":\"events_analytics_platform\",\n                        \"environment\":\"prod\",\n                        \"eventTypes\":[\"trace_item_span\"]\n                        \"query\":\"\",\n                        \"queryType\":1,\n                        \"timeWindow\":3600,\n                        \"extrapolationMode\":\"unknown\",\n                    },\n                ],\n            ```\n\n            **Custom Metric Monitor**\n            - `dataset`: If a custom percentile is used, dataset is `transactions`. Otherwise, dataset is `events_analytics_platform`.\n            - `aggregate`: Valid values are:\n            `avg(x)`, where `x` is `transaction.duration`, `measurements.cls`, `measurements.fcp`, `measurements.fid`, `measurements.fp`, `measurements.lcp`, `measurements.ttfb`, or `measurements.ttfb.requesttime`.\n            `p50(x)`, where `x` is `transaction.duration`, `measurements.cls`, `measurements.fcp`, `measurements.fid`, `measurements.fp`, `measurements.lcp`, `measurements.ttfb`, or `measurements.ttfb.requesttime`.\n            `p75(x)`, where x is `transaction.duration`, `measurements.cls`, `measurements.fcp`, `measurements.fid`, `measurements.fp`, `measurements.lcp`, `measurements.ttfb`, or `measurements.ttfb.requesttime`.\n            `p95(x)`, where x is `transaction.duration`, `measurements.cls`, `measurements.fcp`, `measurements.fid`, `measurements.fp`, `measurements.lcp`, `measurements.ttfb`, or `measurements.ttfb.requesttime`.\n            `p99(x)`, where x is `transaction.duration`, `measurements.cls`, `measurements.fcp`, `measurements.fid`, `measurements.fp`, `measurements.lcp`, `measurements.ttfb`, or `measurements.ttfb.requesttime`.\n            `p100(x)`, where `x` is `transaction.duration`, `measurements.cls`, `measurements.fcp`, `measurements.fid`, `measurements.fp`, `measurements.lcp`, `measurements.ttfb`, or `measurements.ttfb.requesttime`.\n            `percentile(x,y)`, where `x` is `transaction.duration`, `measurements.cls`, `measurements.fcp`, `measurements.fid`, `measurements.fp`, `measurements.lcp`, `measurements.ttfb`, or `measurements.ttfb.requesttime`, and `y` is the custom percentile.\n            `failure_rate()`\n            `apdex(x)`, where `x` is the value of the Apdex score.\n            `count()`\n\n            ```json\n            [\n                {\n                    \"aggregate\": \"p75(measurements.ttfb)\"\n                    \"dataset\": \"events_analytics_platform\",\n                    \"queryType\": 1,\n                },\n            ],\n"
+                    "description": "\n            The data sources for the metric monitor to use based on what you want to measure.\n\n            `timeWindow` is measured in seconds. Cron Monitors use schedules instead of this field.\n            Legacy metric alert rules expressed this value in minutes, so multiply a legacy value\n            by 60 when migrating it to a monitor. For example, a legacy 5-minute window becomes\n            `\"timeWindow\": 300`.\n\n            **Number of Errors Metric Monitor**\n            - `eventTypes`: Any of `error` or `default`.\n            ```json\n                [\n                    {\n                        \"aggregate\": \"count()\",\n                        \"dataset\" : \"events\",\n                        \"environment\": \"prod\",\n                        \"eventTypes\": [\"default\", \"error\"],\n                        \"query\": \"is:unresolved\",\n                        \"queryType\": 0,\n                        \"timeWindow\": 3600\n                    }\n                ]\n            ```\n\n            **Users Experiencing Errors Metric Monitor**\n            - `eventTypes`: Any of `error` or `default`.\n            ```json\n                [\n                    {\n                        \"aggregate\": \"count_unique(tags[sentry:user])\",\n                        \"dataset\" : \"events\",\n                        \"environment\": \"prod\",\n                        \"eventTypes\": [\"default\", \"error\"],\n                        \"query\": \"is:unresolved\",\n                        \"queryType\": 0,\n                        \"timeWindow\": 3600\n                    }\n                ]\n            ```\n\n\n            **Throughput Metric Monitor**\n            ```json\n                [\n                    {\n                        \"aggregate\":\"count(span.duration)\",\n                        \"dataset\":\"events_analytics_platform\",\n                        \"environment\":\"prod\",\n                        \"eventTypes\":[\"trace_item_span\"],\n                        \"query\":\"\",\n                        \"queryType\":1,\n                        \"timeWindow\":3600,\n                        \"extrapolationMode\":\"unknown\"\n                    }\n                ]\n            ```\n\n            **Duration Metric Monitor**\n            ```json\n                [\n                    {\n                        \"aggregate\":\"p95(span.duration)\",\n                        \"dataset\":\"events_analytics_platform\",\n                        \"environment\":\"prod\",\n                        \"eventTypes\":[\"trace_item_span\"],\n                        \"query\":\"\",\n                        \"queryType\":1,\n                        \"timeWindow\":3600,\n                        \"extrapolationMode\":\"unknown\"\n                    }\n                ]\n            ```\n\n            **Failure Rate Metric Monitor**\n            ```json\n                [\n                    {\n                        \"aggregate\":\"failure_rate()\",\n                        \"dataset\":\"events_analytics_platform\",\n                        \"environment\":\"prod\",\n                        \"eventTypes\":[\"trace_item_span\"],\n                        \"query\":\"\",\n                        \"queryType\":1,\n                        \"timeWindow\":3600,\n                        \"extrapolationMode\":\"unknown\"\n                    }\n                ]\n            ```\n\n            **Largest Contentful Paint Metric Monitor**\n            - `dataset`: Use `events_analytics_platform`. To query transaction spans, add `is_transaction:true` to `query`.\n            - `aggregate`: Valid values are `avg(measurements.lcp)`, `p50(measurements.lcp)`, `p75(measurements.lcp)`, `p95(measurements.lcp)`, `p99(measurements.lcp)`, `p100(measurements.lcp)`, and `percentile(measurements.lcp,x)`, where `x` is your custom percentile.\n\n            ```json\n                [\n                    {\n                        \"aggregate\":\"p95(measurements.lcp)\",\n                        \"dataset\":\"events_analytics_platform\",\n                        \"environment\":\"prod\",\n                        \"eventTypes\":[\"trace_item_span\"],\n                        \"query\":\"is_transaction:true\",\n                        \"queryType\":1,\n                        \"timeWindow\":3600,\n                        \"extrapolationMode\":\"unknown\"\n                    }\n                ]\n            ```\n\n            **Custom Metric Monitor**\n            - `dataset`: Use `events_analytics_platform`. To query transaction spans, add `is_transaction:true` to `query`.\n            - `aggregate`: Valid values are:\n            `avg(x)`, where `x` is `transaction.duration`, `measurements.cls`, `measurements.fcp`, `measurements.fid`, `measurements.fp`, `measurements.lcp`, `measurements.ttfb`, or `measurements.ttfb.requesttime`.\n            `p50(x)`, where `x` is `transaction.duration`, `measurements.cls`, `measurements.fcp`, `measurements.fid`, `measurements.fp`, `measurements.lcp`, `measurements.ttfb`, or `measurements.ttfb.requesttime`.\n            `p75(x)`, where x is `transaction.duration`, `measurements.cls`, `measurements.fcp`, `measurements.fid`, `measurements.fp`, `measurements.lcp`, `measurements.ttfb`, or `measurements.ttfb.requesttime`.\n            `p95(x)`, where x is `transaction.duration`, `measurements.cls`, `measurements.fcp`, `measurements.fid`, `measurements.fp`, `measurements.lcp`, `measurements.ttfb`, or `measurements.ttfb.requesttime`.\n            `p99(x)`, where x is `transaction.duration`, `measurements.cls`, `measurements.fcp`, `measurements.fid`, `measurements.fp`, `measurements.lcp`, `measurements.ttfb`, or `measurements.ttfb.requesttime`.\n            `p100(x)`, where `x` is `transaction.duration`, `measurements.cls`, `measurements.fcp`, `measurements.fid`, `measurements.fp`, `measurements.lcp`, `measurements.ttfb`, or `measurements.ttfb.requesttime`.\n            `percentile(x,y)`, where `x` is `transaction.duration`, `measurements.cls`, `measurements.fcp`, `measurements.fid`, `measurements.fp`, `measurements.lcp`, `measurements.ttfb`, or `measurements.ttfb.requesttime`, and `y` is the custom percentile.\n            `failure_rate()`\n            `apdex(x)`, where `x` is the value of the Apdex score.\n            `count()`\n\n            ```json\n            [\n                {\n                    \"aggregate\": \"p75(measurements.ttfb)\",\n                    \"dataset\": \"events_analytics_platform\",\n                    \"environment\": \"prod\",\n                    \"queryType\": 1,\n                    \"eventTypes\": [\"trace_item_span\"],\n                    \"query\": \"is_transaction:true\",\n                    \"timeWindow\": 3600,\n                    \"extrapolationMode\": \"unknown\"\n                }\n            ]\n            ```\n"
                   },
                   "config": {
                     "type": "object",
                     "additionalProperties": {},
-                    "description": "\n            The issue detection type configuration.\n\n\n            - `detectionType`\n                - `static`: Threshold based monitor\n                - `percent`: Change based monitor\n                - `dynamic`: Dynamic monitor\n            - `comparisonDelta`: If selecting a **change** detection type, the comparison delta is the time period at which to compare against in minutes.\n            For example, a value of 3600 compares the metric tracked against data 1 hour ago.\n                - `300`: 5 minutes\n                - `900`: 15 minutes\n                - `3600`: 1 hour\n                - `86400`: 1 day\n                - `604800`: 1 week\n                - `2592000`: 1 month\n\n            **Threshold**\n            ```json\n            {\n                \"detectionType\": \"static\",\n            }\n            ```\n            **Change**\n            ```json\n            {\n                \"detectionType\": \"percent\",\n                \"comparisonDelta\": 3600,\n            }\n            ```\n            **Dynamic**\n            ```json\n            {\n                \"detectionType\": \"dynamic\",\n            }\n            ```\n        "
+                    "description": "\n            The issue detection type configuration.\n\n\n            - `detectionType`\n                - `static`: Threshold based monitor\n                - `percent`: Change based monitor\n                - `dynamic`: Dynamic monitor\n            - `comparisonDelta`: If selecting a **change** detection type, the comparison delta is the time period, in seconds, at which to compare against historical data.\n            For example, a value of 3600 compares the metric tracked against data 1 hour ago.\n                - `300`: 5 minutes\n                - `900`: 15 minutes\n                - `3600`: 1 hour\n                - `86400`: 1 day\n                - `604800`: 1 week\n                - `2592000`: 1 month\n\n            **Threshold**\n            ```json\n            {\n                \"detectionType\": \"static\"\n            }\n            ```\n            **Change**\n            ```json\n            {\n                \"detectionType\": \"percent\",\n                \"comparisonDelta\": 3600\n            }\n            ```\n            **Dynamic**\n            ```json\n            {\n                \"detectionType\": \"dynamic\"\n            }\n            ```\n        "
                   },
                   "condition_group": {
                     "allOf": [
@@ -38729,7 +38907,7 @@
     "/api/0/organizations/{organization_id_or_slug}/sentry-app-components/": {
       "get": {
         "operationId": "listOrganizationSentryAppComponents",
-        "description": "**Experimental:** This API is under active development and may change.\n\nRetrieve prepared UI components for installed custom integrations, including issue-link forms.",
+        "description": "**Experimental:** This API is under active development and may change.\n\nRetrieve prepared UI components for installed custom integrations, including issue-link forms.\n\nAPI clients can use `filter=issue-link` to create or link an external issue through\nan app such as Linear. The `uri` values in `schema` are paths on the app's own server.\nClients never call them directly; Sentry calls the app on their behalf:\n\n- To load a select field's choices, pass the field's `uri` to\n  `GET /sentry-app-installations/{installationUuid}/external-requests/`.\n- To create or link the issue, send the form values with the `uri` from\n  `schema.create` or `schema.link` to\n  `POST /sentry-app-installations/{installationUuid}/external-issue-actions/`.",
         "summary": "List an Organization's Installed Sentry App Components",
         "parameters": [
           {
@@ -38859,10 +39037,14 @@
                           "slug",
                           "uuid"
                         ]
+                      },
+                      "installationUuid": {
+                        "type": "string"
                       }
                     },
                     "required": [
                       "error",
+                      "installationUuid",
                       "schema",
                       "sentryApp",
                       "type",
@@ -42342,7 +42524,7 @@
     "/api/0/organizations/{organization_id_or_slug}/trace-items/attributes/": {
       "get": {
         "operationId": "listOrganizationTraceItemAttributes",
-        "description": "List the attribute keys available on a given trace item dataset (spans, logs,\ntrace metrics, etc.), with optional substring and structured filtering.",
+        "description": "List the attribute keys available on a given trace item dataset (spans, logs,\ntrace metrics, etc.), with optional substring and structured filtering.\n\nPass `expand=context` (experimental) to include each attribute's metadata:\na brief description, examples, and deprecation details.",
         "summary": "List Trace Item Attributes",
         "parameters": [
           {
@@ -42475,6 +42657,21 @@
           },
           {
             "in": "query",
+            "name": "expand",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "context"
+                ]
+              }
+            },
+            "description": "**Experimental:** This parameter is under active development and may change.\n\nOptional fields to expand. Pass `context` to include attribute metadata (brief, examples, deprecation, etc.).",
+            "x-sentry-experimental": true
+          },
+          {
+            "in": "query",
             "name": "cursor",
             "schema": {
               "type": "string",
@@ -42543,6 +42740,53 @@
                           "array"
                         ],
                         "type": "string"
+                      },
+                      "context": {
+                        "type": "object",
+                        "description": "Additional, mostly-static metadata about an attribute.\n\nWhen ``expand=context`` is requested, context is attached to every attribute.\nMetadata comes from the sentry conventions, Sentry's own column definitions,\nor user-authored context (gated behind ``data-browsing-attribute-context``),\nin that precedence order. Only the fields available are included, so an\nattribute with no metadata gets an empty context.",
+                        "properties": {
+                          "isConvention": {
+                            "type": "boolean"
+                          },
+                          "isCustom": {
+                            "type": "boolean"
+                          },
+                          "brief": {
+                            "type": "string"
+                          },
+                          "isDeprecated": {
+                            "type": "boolean"
+                          },
+                          "details": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "examples": {
+                            "type": "array",
+                            "items": {
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "integer"
+                                },
+                                {
+                                  "type": "number",
+                                  "format": "double"
+                                },
+                                {
+                                  "type": "boolean"
+                                }
+                              ]
+                            }
+                          },
+                          "replacementAttribute": {
+                            "type": "string"
+                          }
+                        }
                       }
                     },
                     "required": [
@@ -45317,7 +45561,7 @@
                   "config": {
                     "type": "object",
                     "additionalProperties": {},
-                    "description": "\n        Typically the frequency at which the alert will fire, in minutes.\n\n        - `0`: 0 minutes\n        - `5`: 5 minutes\n        - `10`: 10 minutes\n        - `30`: 30 minutes\n        - `60`: 1 hour\n        - `180`: 3 hours\n        - `720`: 12 hours\n        - `1440`: 24 hours\n\n        ```json\n            {\n                \"frequency\":3600\n            }\n        ```\n        "
+                    "description": "\n        Typically the frequency at which the alert will fire, in minutes.\n\n        - `0`: 0 minutes\n        - `5`: 5 minutes\n        - `10`: 10 minutes\n        - `30`: 30 minutes\n        - `60`: 1 hour\n        - `180`: 3 hours\n        - `720`: 12 hours\n        - `1440`: 24 hours\n\n        ```json\n            {\n                \"frequency\": 60\n            }\n        ```\n        "
                   },
                   "environment": {
                     "type": "string",
@@ -45353,7 +45597,7 @@
                         ]
                       }
                     ],
-                    "description": "The conditions on which the alert will trigger. See available options below.\n        ```json\n            \"triggers\": {\n                \"organizationId\": \"1\",\n                \"logicType\": \"any-short\",\n                \"conditions\": [\n                    {\n                        \"type\": \"first_seen_event\",\n                        \"comparison\": true,\n                        \"conditionResult\": true\n                    },\n                    {\n                        \"type\": \"issue_resolved_trigger\",\n                        \"comparison\": true,\n                        \"conditionResult\": true\n                    },\n                    {\n                        \"type\": \"reappeared_event\",\n                        \"comparison\": true,\n                        \"conditionResult\": true\n                    },\n                    {\n                        \"type\": \"regression_event\",\n                        \"comparison\": true,\n                        \"conditionResult\": true\n                    },\n                    {\n                        \"type\": \"seer_activity_trigger\",\n                        \"comparison\": [\n                            \"rca_completed\",\n                            \"solution_completed\",\n                            \"coding_completed\",\n                            \"pr_ready_for_review\"\n                        ],\n                        \"conditionResult\": true\n                    }\n                ],\n                \"actions\": []\n            }\n        ```\n        "
+                    "description": "The conditions on which the alert will trigger. See available options below.\n        ```json\n        {\n            \"triggers\": {\n                \"organizationId\": \"1\",\n                \"logicType\": \"any-short\",\n                \"conditions\": [\n                    {\n                        \"type\": \"first_seen_event\",\n                        \"comparison\": true,\n                        \"conditionResult\": true\n                    },\n                    {\n                        \"type\": \"issue_resolved_trigger\",\n                        \"comparison\": true,\n                        \"conditionResult\": true\n                    },\n                    {\n                        \"type\": \"reappeared_event\",\n                        \"comparison\": true,\n                        \"conditionResult\": true\n                    },\n                    {\n                        \"type\": \"regression_event\",\n                        \"comparison\": true,\n                        \"conditionResult\": true\n                    },\n                    {\n                        \"type\": \"seer_activity_trigger\",\n                        \"comparison\": [\n                            \"rca_completed\",\n                            \"solution_completed\",\n                            \"coding_completed\",\n                            \"pr_ready_for_review\"\n                        ],\n                        \"conditionResult\": true\n                    }\n                ]\n            }\n        }\n        ```\n        "
                   },
                   "action_filters": {
                     "type": "array",
@@ -46893,7 +47137,7 @@
                   "config": {
                     "type": "object",
                     "additionalProperties": {},
-                    "description": "\n        Typically the frequency at which the alert will fire, in minutes.\n\n        - `0`: 0 minutes\n        - `5`: 5 minutes\n        - `10`: 10 minutes\n        - `30`: 30 minutes\n        - `60`: 1 hour\n        - `180`: 3 hours\n        - `720`: 12 hours\n        - `1440`: 24 hours\n\n        ```json\n            {\n                \"frequency\":3600\n            }\n        ```\n        "
+                    "description": "\n        Typically the frequency at which the alert will fire, in minutes.\n\n        - `0`: 0 minutes\n        - `5`: 5 minutes\n        - `10`: 10 minutes\n        - `30`: 30 minutes\n        - `60`: 1 hour\n        - `180`: 3 hours\n        - `720`: 12 hours\n        - `1440`: 24 hours\n\n        ```json\n            {\n                \"frequency\": 60\n            }\n        ```\n        "
                   },
                   "environment": {
                     "type": "string",
@@ -46929,7 +47173,7 @@
                         ]
                       }
                     ],
-                    "description": "The conditions on which the alert will trigger. See available options below.\n        ```json\n            \"triggers\": {\n                \"organizationId\": \"1\",\n                \"logicType\": \"any-short\",\n                \"conditions\": [\n                    {\n                        \"type\": \"first_seen_event\",\n                        \"comparison\": true,\n                        \"conditionResult\": true\n                    },\n                    {\n                        \"type\": \"issue_resolved_trigger\",\n                        \"comparison\": true,\n                        \"conditionResult\": true\n                    },\n                    {\n                        \"type\": \"reappeared_event\",\n                        \"comparison\": true,\n                        \"conditionResult\": true\n                    },\n                    {\n                        \"type\": \"regression_event\",\n                        \"comparison\": true,\n                        \"conditionResult\": true\n                    },\n                    {\n                        \"type\": \"seer_activity_trigger\",\n                        \"comparison\": [\n                            \"rca_completed\",\n                            \"solution_completed\",\n                            \"coding_completed\",\n                            \"pr_ready_for_review\"\n                        ],\n                        \"conditionResult\": true\n                    }\n                ],\n                \"actions\": []\n            }\n        ```\n        "
+                    "description": "The conditions on which the alert will trigger. See available options below.\n        ```json\n        {\n            \"triggers\": {\n                \"organizationId\": \"1\",\n                \"logicType\": \"any-short\",\n                \"conditions\": [\n                    {\n                        \"type\": \"first_seen_event\",\n                        \"comparison\": true,\n                        \"conditionResult\": true\n                    },\n                    {\n                        \"type\": \"issue_resolved_trigger\",\n                        \"comparison\": true,\n                        \"conditionResult\": true\n                    },\n                    {\n                        \"type\": \"reappeared_event\",\n                        \"comparison\": true,\n                        \"conditionResult\": true\n                    },\n                    {\n                        \"type\": \"regression_event\",\n                        \"comparison\": true,\n                        \"conditionResult\": true\n                    },\n                    {\n                        \"type\": \"seer_activity_trigger\",\n                        \"comparison\": [\n                            \"rca_completed\",\n                            \"solution_completed\",\n                            \"coding_completed\",\n                            \"pr_ready_for_review\"\n                        ],\n                        \"conditionResult\": true\n                    }\n                ]\n            }\n        }\n        ```\n        "
                   },
                   "action_filters": {
                     "type": "array",
@@ -67935,7 +68179,7 @@
     "/api/0/sentry-app-installations/{uuid}/external-issue-actions/": {
       "post": {
         "operationId": "executeSentryAppInstallationExternalIssueAction",
-        "description": "**Experimental:** This API is under active development and may change.\n\nInvoke the installed app's issue-link callback and store the returned association.\nSubmit the app-specific form fields alongside `groupId`, `action`, and `uri`.\n\nFor `action=link`, the optional `expectedExternalIssueUrl` query parameter\nrequires an exact canonical `webUrl` match. An existing matching link is\nreturned with HTTP 200 without calling the App; a different link\nreturns 409. The callback must also return this URL before a new link is\nsaved. Callback effects cannot be rolled back if its response conflicts.\nA new association returns HTTP 201. Omitting the parameter preserves the\nApp's existing replacement behavior and HTTP 200 response.",
+        "description": "**Experimental:** This API is under active development and may change.\n\nInvoke the installed app's issue-link callback and store the returned association.\nSubmit the app-specific form fields alongside `groupId`, `action`, and `uri`.\nThe installation UUID, form fields, and `uri` come from the organization's\n`issue-link` Sentry App components.\n\nFor `action=link`, the optional `expectedExternalIssueUrl` query parameter\nrequires an exact canonical `webUrl` match. An existing matching link is\nreturned with HTTP 200 without calling the App; a different link\nreturns 409. The callback must also return this URL before a new link is\nsaved. Callback effects cannot be rolled back if its response conflicts.\nA new association returns HTTP 201. Omitting the parameter preserves the\nApp's existing replacement behavior and HTTP 200 response.",
         "summary": "Create or Link an External Issue Through a Sentry App",
         "parameters": [
           {
@@ -80013,12 +80257,12 @@
           "data_sources": {
             "type": "array",
             "items": {},
-            "description": "\n            The data sources for the monitor to use based on what you want to measure.\n\n            **Number of Errors Metric Monitor**\n            - `eventTypes`: Any of `error` or `default`.\n            ```json\n                [\n                    {\n                        \"aggregate\": \"count()\",\n                        \"dataset\" : \"events\",\n                        \"environment\": \"prod\",\n                        \"eventTypes\": [\"default\", \"error\"],\n                        \"query\": \"is:unresolved\",\n                        \"queryType\": 0,\n                        \"timeWindow\": 3600,\n                    },\n                ],\n            ```\n\n            **Users Experiencing Errors Metric Monitor**\n            - `eventTypes`: Any of `error` or `default`.\n            ```json\n                [\n                    {\n                        \"aggregate\": \"count_unique(tags[sentry:user])\",\n                        \"dataset\" : \"events\",\n                        \"environment\": \"prod\",\n                        \"eventTypes\": [\"default\", \"error\"],\n                        \"query\": \"is:unresolved\",\n                        \"queryType\": 0,\n                        \"timeWindow\": 3600,\n                    },\n                ],\n            ```\n\n\n            **Throughput Metric Monitor**\n            ```json\n                [\n                    {\n                        \"aggregate\":\"count(span.duration)\",\n                        \"dataset\":\"events_analytics_platform\",\n                        \"environment\":\"prod\",\n                        \"eventTypes\":[\"trace_item_span\"]\n                        \"query\":\"\",\n                        \"queryType\":1,\n                        \"timeWindow\":3600,\n                        \"extrapolationMode\":\"unknown\",\n                    },\n                ],\n            ```\n\n            **Duration Metric Monitor**\n            ```json\n                [\n                    {\n                        \"aggregate\":\"p95(span.duration)\",\n                        \"dataset\":\"events_analytics_platform\",\n                        \"environment\":\"prod\",\n                        \"eventTypes\":[\"trace_item_span\"]\n                        \"query\":\"\",\n                        \"queryType\":1,\n                        \"timeWindow\":3600,\n                        \"extrapolationMode\":\"unknown\",\n                    },\n                ],\n            ```\n\n            **Failure Rate Metric Monitor**\n            ```json\n                [\n                    {\n                        \"aggregate\":\"failure_rate()\",\n                        \"dataset\":\"events_analytics_platform\",\n                        \"environment\":\"prod\",\n                        \"eventTypes\":[\"trace_item_span\"]\n                        \"query\":\"\",\n                        \"queryType\":1,\n                        \"timeWindow\":3600,\n                        \"extrapolationMode\":\"unknown\",\n                    },\n                ],\n            ```\n\n            **Largest Contentful Paint Metric Monitor**\n            - `dataset`: If a custom percentile is used, dataset is `transactions`. Otherwise, dataset is `events_analytics_platform`.\n            - `aggregate`: Valid values are `avg(measurements.lcp)`, `p50(measurements.lcp)`, `p75(measurements.lcp)`, `p95(measurements.lcp)`, `p99(measurements.lcp)`, `p100(measurements.lcp)`, and `percentile(measurements.lcp,x)`, where `x` is your custom percentile.\n\n            ```json\n                [\n                    {\n                        \"aggregate\":\"p95(measurements.lcp)\",\n                        \"dataset\":\"events_analytics_platform\",\n                        \"environment\":\"prod\",\n                        \"eventTypes\":[\"trace_item_span\"]\n                        \"query\":\"\",\n                        \"queryType\":1,\n                        \"timeWindow\":3600,\n                        \"extrapolationMode\":\"unknown\",\n                    },\n                ],\n            ```\n\n            **Custom Metric Monitor**\n            - `dataset`: If a custom percentile is used, dataset is `transactions`. Otherwise, dataset is `events_analytics_platform`.\n            - `aggregate`: Valid values are:\n            `avg(x)`, where `x` is `transaction.duration`, `measurements.cls`, `measurements.fcp`, `measurements.fid`, `measurements.fp`, `measurements.lcp`, `measurements.ttfb`, or `measurements.ttfb.requesttime`.\n            `p50(x)`, where `x` is `transaction.duration`, `measurements.cls`, `measurements.fcp`, `measurements.fid`, `measurements.fp`, `measurements.lcp`, `measurements.ttfb`, or `measurements.ttfb.requesttime`.\n            `p75(x)`, where x is `transaction.duration`, `measurements.cls`, `measurements.fcp`, `measurements.fid`, `measurements.fp`, `measurements.lcp`, `measurements.ttfb`, or `measurements.ttfb.requesttime`.\n            `p95(x)`, where x is `transaction.duration`, `measurements.cls`, `measurements.fcp`, `measurements.fid`, `measurements.fp`, `measurements.lcp`, `measurements.ttfb`, or `measurements.ttfb.requesttime`.\n            `p99(x)`, where x is `transaction.duration`, `measurements.cls`, `measurements.fcp`, `measurements.fid`, `measurements.fp`, `measurements.lcp`, `measurements.ttfb`, or `measurements.ttfb.requesttime`.\n            `p100(x)`, where `x` is `transaction.duration`, `measurements.cls`, `measurements.fcp`, `measurements.fid`, `measurements.fp`, `measurements.lcp`, `measurements.ttfb`, or `measurements.ttfb.requesttime`.\n            `percentile(x,y)`, where `x` is `transaction.duration`, `measurements.cls`, `measurements.fcp`, `measurements.fid`, `measurements.fp`, `measurements.lcp`, `measurements.ttfb`, or `measurements.ttfb.requesttime`, and `y` is the custom percentile.\n            `failure_rate()`\n            `apdex(x)`, where `x` is the value of the Apdex score.\n            `count()`\n\n            ```json\n            [\n                {\n                    \"aggregate\": \"p75(measurements.ttfb)\"\n                    \"dataset\": \"events_analytics_platform\",\n                    \"queryType\": 1,\n                },\n            ],\n"
+            "description": "\n            The data sources for the metric monitor to use based on what you want to measure.\n\n            `timeWindow` is measured in seconds. Cron Monitors use schedules instead of this field.\n            Legacy metric alert rules expressed this value in minutes, so multiply a legacy value\n            by 60 when migrating it to a monitor. For example, a legacy 5-minute window becomes\n            `\"timeWindow\": 300`.\n\n            **Number of Errors Metric Monitor**\n            - `eventTypes`: Any of `error` or `default`.\n            ```json\n                [\n                    {\n                        \"aggregate\": \"count()\",\n                        \"dataset\" : \"events\",\n                        \"environment\": \"prod\",\n                        \"eventTypes\": [\"default\", \"error\"],\n                        \"query\": \"is:unresolved\",\n                        \"queryType\": 0,\n                        \"timeWindow\": 3600\n                    }\n                ]\n            ```\n\n            **Users Experiencing Errors Metric Monitor**\n            - `eventTypes`: Any of `error` or `default`.\n            ```json\n                [\n                    {\n                        \"aggregate\": \"count_unique(tags[sentry:user])\",\n                        \"dataset\" : \"events\",\n                        \"environment\": \"prod\",\n                        \"eventTypes\": [\"default\", \"error\"],\n                        \"query\": \"is:unresolved\",\n                        \"queryType\": 0,\n                        \"timeWindow\": 3600\n                    }\n                ]\n            ```\n\n\n            **Throughput Metric Monitor**\n            ```json\n                [\n                    {\n                        \"aggregate\":\"count(span.duration)\",\n                        \"dataset\":\"events_analytics_platform\",\n                        \"environment\":\"prod\",\n                        \"eventTypes\":[\"trace_item_span\"],\n                        \"query\":\"\",\n                        \"queryType\":1,\n                        \"timeWindow\":3600,\n                        \"extrapolationMode\":\"unknown\"\n                    }\n                ]\n            ```\n\n            **Duration Metric Monitor**\n            ```json\n                [\n                    {\n                        \"aggregate\":\"p95(span.duration)\",\n                        \"dataset\":\"events_analytics_platform\",\n                        \"environment\":\"prod\",\n                        \"eventTypes\":[\"trace_item_span\"],\n                        \"query\":\"\",\n                        \"queryType\":1,\n                        \"timeWindow\":3600,\n                        \"extrapolationMode\":\"unknown\"\n                    }\n                ]\n            ```\n\n            **Failure Rate Metric Monitor**\n            ```json\n                [\n                    {\n                        \"aggregate\":\"failure_rate()\",\n                        \"dataset\":\"events_analytics_platform\",\n                        \"environment\":\"prod\",\n                        \"eventTypes\":[\"trace_item_span\"],\n                        \"query\":\"\",\n                        \"queryType\":1,\n                        \"timeWindow\":3600,\n                        \"extrapolationMode\":\"unknown\"\n                    }\n                ]\n            ```\n\n            **Largest Contentful Paint Metric Monitor**\n            - `dataset`: Use `events_analytics_platform`. To query transaction spans, add `is_transaction:true` to `query`.\n            - `aggregate`: Valid values are `avg(measurements.lcp)`, `p50(measurements.lcp)`, `p75(measurements.lcp)`, `p95(measurements.lcp)`, `p99(measurements.lcp)`, `p100(measurements.lcp)`, and `percentile(measurements.lcp,x)`, where `x` is your custom percentile.\n\n            ```json\n                [\n                    {\n                        \"aggregate\":\"p95(measurements.lcp)\",\n                        \"dataset\":\"events_analytics_platform\",\n                        \"environment\":\"prod\",\n                        \"eventTypes\":[\"trace_item_span\"],\n                        \"query\":\"is_transaction:true\",\n                        \"queryType\":1,\n                        \"timeWindow\":3600,\n                        \"extrapolationMode\":\"unknown\"\n                    }\n                ]\n            ```\n\n            **Custom Metric Monitor**\n            - `dataset`: Use `events_analytics_platform`. To query transaction spans, add `is_transaction:true` to `query`.\n            - `aggregate`: Valid values are:\n            `avg(x)`, where `x` is `transaction.duration`, `measurements.cls`, `measurements.fcp`, `measurements.fid`, `measurements.fp`, `measurements.lcp`, `measurements.ttfb`, or `measurements.ttfb.requesttime`.\n            `p50(x)`, where `x` is `transaction.duration`, `measurements.cls`, `measurements.fcp`, `measurements.fid`, `measurements.fp`, `measurements.lcp`, `measurements.ttfb`, or `measurements.ttfb.requesttime`.\n            `p75(x)`, where x is `transaction.duration`, `measurements.cls`, `measurements.fcp`, `measurements.fid`, `measurements.fp`, `measurements.lcp`, `measurements.ttfb`, or `measurements.ttfb.requesttime`.\n            `p95(x)`, where x is `transaction.duration`, `measurements.cls`, `measurements.fcp`, `measurements.fid`, `measurements.fp`, `measurements.lcp`, `measurements.ttfb`, or `measurements.ttfb.requesttime`.\n            `p99(x)`, where x is `transaction.duration`, `measurements.cls`, `measurements.fcp`, `measurements.fid`, `measurements.fp`, `measurements.lcp`, `measurements.ttfb`, or `measurements.ttfb.requesttime`.\n            `p100(x)`, where `x` is `transaction.duration`, `measurements.cls`, `measurements.fcp`, `measurements.fid`, `measurements.fp`, `measurements.lcp`, `measurements.ttfb`, or `measurements.ttfb.requesttime`.\n            `percentile(x,y)`, where `x` is `transaction.duration`, `measurements.cls`, `measurements.fcp`, `measurements.fid`, `measurements.fp`, `measurements.lcp`, `measurements.ttfb`, or `measurements.ttfb.requesttime`, and `y` is the custom percentile.\n            `failure_rate()`\n            `apdex(x)`, where `x` is the value of the Apdex score.\n            `count()`\n\n            ```json\n            [\n                {\n                    \"aggregate\": \"p75(measurements.ttfb)\",\n                    \"dataset\": \"events_analytics_platform\",\n                    \"environment\": \"prod\",\n                    \"queryType\": 1,\n                    \"eventTypes\": [\"trace_item_span\"],\n                    \"query\": \"is_transaction:true\",\n                    \"timeWindow\": 3600,\n                    \"extrapolationMode\": \"unknown\"\n                }\n            ]\n            ```\n"
           },
           "config": {
             "type": "object",
             "additionalProperties": {},
-            "description": "\n            The issue detection type configuration.\n\n\n            - `detectionType`\n                - `static`: Threshold based monitor\n                - `percent`: Change based monitor\n                - `dynamic`: Dynamic monitor\n            - `comparisonDelta`: If selecting a **change** detection type, the comparison delta is the time period at which to compare against in minutes.\n            For example, a value of 3600 compares the metric tracked against data 1 hour ago.\n                - `300`: 5 minutes\n                - `900`: 15 minutes\n                - `3600`: 1 hour\n                - `86400`: 1 day\n                - `604800`: 1 week\n                - `2592000`: 1 month\n\n            **Threshold**\n            ```json\n            {\n                \"detectionType\": \"static\",\n            }\n            ```\n            **Change**\n            ```json\n            {\n                \"detectionType\": \"percent\",\n                \"comparisonDelta\": 3600,\n            }\n            ```\n            **Dynamic**\n            ```json\n            {\n                \"detectionType\": \"dynamic\",\n            }\n            ```\n        "
+            "description": "\n            The issue detection type configuration.\n\n\n            - `detectionType`\n                - `static`: Threshold based monitor\n                - `percent`: Change based monitor\n                - `dynamic`: Dynamic monitor\n            - `comparisonDelta`: If selecting a **change** detection type, the comparison delta is the time period, in seconds, at which to compare against historical data.\n            For example, a value of 3600 compares the metric tracked against data 1 hour ago.\n                - `300`: 5 minutes\n                - `900`: 15 minutes\n                - `3600`: 1 hour\n                - `86400`: 1 day\n                - `604800`: 1 week\n                - `2592000`: 1 month\n\n            **Threshold**\n            ```json\n            {\n                \"detectionType\": \"static\"\n            }\n            ```\n            **Change**\n            ```json\n            {\n                \"detectionType\": \"percent\",\n                \"comparisonDelta\": 3600\n            }\n            ```\n            **Dynamic**\n            ```json\n            {\n                \"detectionType\": \"dynamic\"\n            }\n            ```\n        "
           },
           "condition_group": {
             "allOf": [
@@ -89935,6 +90179,57 @@
           "state"
         ]
       },
+      "IntegrationChannelValidationResponse": {
+        "type": "object",
+        "properties": {
+          "detail": {
+            "type": "string"
+          },
+          "valid": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "valid"
+        ]
+      },
+      "IntegrationChannelsResponse": {
+        "type": "object",
+        "properties": {
+          "warning": {
+            "type": "string"
+          },
+          "results": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "display": {
+                  "type": "string"
+                },
+                "type": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "display",
+                "id",
+                "name",
+                "type"
+              ]
+            }
+          }
+        },
+        "required": [
+          "results"
+        ]
+      },
       "IntegrationIssueConfigResponse": {
         "type": "object",
         "properties": {
@@ -97337,6 +97632,53 @@
                 "array"
               ],
               "type": "string"
+            },
+            "context": {
+              "type": "object",
+              "description": "Additional, mostly-static metadata about an attribute.\n\nWhen ``expand=context`` is requested, context is attached to every attribute.\nMetadata comes from the sentry conventions, Sentry's own column definitions,\nor user-authored context (gated behind ``data-browsing-attribute-context``),\nin that precedence order. Only the fields available are included, so an\nattribute with no metadata gets an empty context.",
+              "properties": {
+                "isConvention": {
+                  "type": "boolean"
+                },
+                "isCustom": {
+                  "type": "boolean"
+                },
+                "brief": {
+                  "type": "string"
+                },
+                "isDeprecated": {
+                  "type": "boolean"
+                },
+                "details": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "examples": {
+                  "type": "array",
+                  "items": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "type": "number",
+                        "format": "double"
+                      },
+                      {
+                        "type": "boolean"
+                      }
+                    ]
+                  }
+                },
+                "replacementAttribute": {
+                  "type": "string"
+                }
+              }
             }
           },
           "required": [
@@ -109608,10 +109950,14 @@
                 "slug",
                 "uuid"
               ]
+            },
+            "installationUuid": {
+              "type": "string"
             }
           },
           "required": [
             "error",
+            "installationUuid",
             "schema",
             "sentryApp",
             "type",
@@ -113517,7 +113863,7 @@
           "config": {
             "type": "object",
             "additionalProperties": {},
-            "description": "\n        Typically the frequency at which the alert will fire, in minutes.\n\n        - `0`: 0 minutes\n        - `5`: 5 minutes\n        - `10`: 10 minutes\n        - `30`: 30 minutes\n        - `60`: 1 hour\n        - `180`: 3 hours\n        - `720`: 12 hours\n        - `1440`: 24 hours\n\n        ```json\n            {\n                \"frequency\":3600\n            }\n        ```\n        "
+            "description": "\n        Typically the frequency at which the alert will fire, in minutes.\n\n        - `0`: 0 minutes\n        - `5`: 5 minutes\n        - `10`: 10 minutes\n        - `30`: 30 minutes\n        - `60`: 1 hour\n        - `180`: 3 hours\n        - `720`: 12 hours\n        - `1440`: 24 hours\n\n        ```json\n            {\n                \"frequency\": 60\n            }\n        ```\n        "
           },
           "environment": {
             "type": "string",
@@ -113553,7 +113899,7 @@
                 ]
               }
             ],
-            "description": "The conditions on which the alert will trigger. See available options below.\n        ```json\n            \"triggers\": {\n                \"organizationId\": \"1\",\n                \"logicType\": \"any-short\",\n                \"conditions\": [\n                    {\n                        \"type\": \"first_seen_event\",\n                        \"comparison\": true,\n                        \"conditionResult\": true\n                    },\n                    {\n                        \"type\": \"issue_resolved_trigger\",\n                        \"comparison\": true,\n                        \"conditionResult\": true\n                    },\n                    {\n                        \"type\": \"reappeared_event\",\n                        \"comparison\": true,\n                        \"conditionResult\": true\n                    },\n                    {\n                        \"type\": \"regression_event\",\n                        \"comparison\": true,\n                        \"conditionResult\": true\n                    },\n                    {\n                        \"type\": \"seer_activity_trigger\",\n                        \"comparison\": [\n                            \"rca_completed\",\n                            \"solution_completed\",\n                            \"coding_completed\",\n                            \"pr_ready_for_review\"\n                        ],\n                        \"conditionResult\": true\n                    }\n                ],\n                \"actions\": []\n            }\n        ```\n        "
+            "description": "The conditions on which the alert will trigger. See available options below.\n        ```json\n        {\n            \"triggers\": {\n                \"organizationId\": \"1\",\n                \"logicType\": \"any-short\",\n                \"conditions\": [\n                    {\n                        \"type\": \"first_seen_event\",\n                        \"comparison\": true,\n                        \"conditionResult\": true\n                    },\n                    {\n                        \"type\": \"issue_resolved_trigger\",\n                        \"comparison\": true,\n                        \"conditionResult\": true\n                    },\n                    {\n                        \"type\": \"reappeared_event\",\n                        \"comparison\": true,\n                        \"conditionResult\": true\n                    },\n                    {\n                        \"type\": \"regression_event\",\n                        \"comparison\": true,\n                        \"conditionResult\": true\n                    },\n                    {\n                        \"type\": \"seer_activity_trigger\",\n                        \"comparison\": [\n                            \"rca_completed\",\n                            \"solution_completed\",\n                            \"coding_completed\",\n                            \"pr_ready_for_review\"\n                        ],\n                        \"conditionResult\": true\n                    }\n                ]\n            }\n        }\n        ```\n        "
           },
           "action_filters": {
             "type": "array",
