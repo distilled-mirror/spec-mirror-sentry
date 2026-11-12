@@ -16425,6 +16425,7 @@
                             "required": [
                               "detectionType"
                             ],
+                            "additionalProperties": false,
                             "properties": {
                               "comparisonDelta": {
                                 "type": "integer",
@@ -16434,10 +16435,8 @@
                                   3600,
                                   86400,
                                   604800,
-                                  2592000,
-                                  null
+                                  2592000
                                 ],
-                                "nullable": true,
                                 "description": "For percent detection, how far back the compared window is, in seconds"
                               },
                               "detectionType": {
@@ -20158,6 +20157,7 @@
                             "required": [
                               "detectionType"
                             ],
+                            "additionalProperties": false,
                             "properties": {
                               "comparisonDelta": {
                                 "type": "integer",
@@ -20167,10 +20167,8 @@
                                   3600,
                                   86400,
                                   604800,
-                                  2592000,
-                                  null
+                                  2592000
                                 ],
-                                "nullable": true,
                                 "description": "For percent detection, how far back the compared window is, in seconds"
                               },
                               "detectionType": {
@@ -23943,6 +23941,7 @@
                           "required": [
                             "detectionType"
                           ],
+                          "additionalProperties": false,
                           "properties": {
                             "comparisonDelta": {
                               "type": "integer",
@@ -23952,10 +23951,8 @@
                                 3600,
                                 86400,
                                 604800,
-                                2592000,
-                                null
+                                2592000
                               ],
-                              "nullable": true,
                               "description": "For percent detection, how far back the compared window is, in seconds"
                             },
                             "detectionType": {
@@ -25037,10 +25034,8 @@
                                   3600,
                                   86400,
                                   604800,
-                                  2592000,
-                                  null
-                                ],
-                                "nullable": true
+                                  2592000
+                                ]
                               },
                               "detectionType": {
                                 "type": "string",
@@ -25049,6 +25044,7 @@
                                 ]
                               }
                             },
+                            "additionalProperties": false,
                             "title": "Static Detection Config"
                           },
                           {
@@ -25066,10 +25062,8 @@
                                   3600,
                                   86400,
                                   604800,
-                                  2592000,
-                                  null
-                                ],
-                                "nullable": true
+                                  2592000
+                                ]
                               },
                               "detectionType": {
                                 "type": "string",
@@ -25078,6 +25072,7 @@
                                 ]
                               }
                             },
+                            "additionalProperties": false,
                             "title": "Percent Detection Config"
                           },
                           {
@@ -25095,10 +25090,8 @@
                                   3600,
                                   86400,
                                   604800,
-                                  2592000,
-                                  null
-                                ],
-                                "nullable": true
+                                  2592000
+                                ]
                               },
                               "detectionType": {
                                 "type": "string",
@@ -25107,6 +25100,7 @@
                                 ]
                               }
                             },
+                            "additionalProperties": false,
                             "title": "Dynamic Detection Config"
                           }
                         ],
@@ -29297,6 +29291,7 @@
                           "required": [
                             "detectionType"
                           ],
+                          "additionalProperties": false,
                           "properties": {
                             "comparisonDelta": {
                               "type": "integer",
@@ -29306,10 +29301,8 @@
                                 3600,
                                 86400,
                                 604800,
-                                2592000,
-                                null
+                                2592000
                               ],
-                              "nullable": true,
                               "description": "For percent detection, how far back the compared window is, in seconds"
                             },
                             "detectionType": {
@@ -33502,7 +33495,7 @@
     "/api/0/organizations/{organization_id_or_slug}/eventids/{event_id}/": {
       "get": {
         "operationId": "resolveOrganizationEventId",
-        "description": "This resolves an event ID to the project slug and internal issue ID and internal event ID.",
+        "description": "Resolve an event ID to its project slug, issue ID, and event details. Only projects the\ncaller can access are searched.",
         "summary": "Resolve an Event ID",
         "parameters": [
           {
@@ -35784,6 +35777,15 @@
               }
             },
             "description": ""
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
           },
           "404": {
             "description": "Not Found"
@@ -42139,7 +42141,8 @@
                       },
                       "sessionCount": {
                         "type": "integer",
-                        "description": "Number of sessions in the issue's project over the query time range. Only included when requested with expand=sessions"
+                        "nullable": true,
+                        "description": "Number of sessions in the issue's project over the query time range. Null when session data is unavailable. Only included with expand=sessions when a stats period is enabled and stats is not collapsed"
                       },
                       "inbox": {
                         "type": "object",
@@ -58478,10 +58481,8 @@
                                   3600,
                                   86400,
                                   604800,
-                                  2592000,
-                                  null
-                                ],
-                                "nullable": true
+                                  2592000
+                                ]
                               },
                               "detectionType": {
                                 "type": "string",
@@ -58490,6 +58491,7 @@
                                 ]
                               }
                             },
+                            "additionalProperties": false,
                             "title": "Static Detection Config"
                           },
                           {
@@ -58507,10 +58509,8 @@
                                   3600,
                                   86400,
                                   604800,
-                                  2592000,
-                                  null
-                                ],
-                                "nullable": true
+                                  2592000
+                                ]
                               },
                               "detectionType": {
                                 "type": "string",
@@ -58519,6 +58519,7 @@
                                 ]
                               }
                             },
+                            "additionalProperties": false,
                             "title": "Percent Detection Config"
                           },
                           {
@@ -58536,10 +58537,8 @@
                                   3600,
                                   86400,
                                   604800,
-                                  2592000,
-                                  null
-                                ],
-                                "nullable": true
+                                  2592000
+                                ]
                               },
                               "detectionType": {
                                 "type": "string",
@@ -58548,6 +58547,7 @@
                                 ]
                               }
                             },
+                            "additionalProperties": false,
                             "title": "Dynamic Detection Config"
                           }
                         ],
@@ -62867,6 +62867,7 @@
                           "required": [
                             "detectionType"
                           ],
+                          "additionalProperties": false,
                           "properties": {
                             "comparisonDelta": {
                               "type": "integer",
@@ -62876,10 +62877,8 @@
                                 3600,
                                 86400,
                                 604800,
-                                2592000,
-                                null
+                                2592000
                               ],
-                              "nullable": true,
                               "description": "For percent detection, how far back the compared window is, in seconds"
                             },
                             "detectionType": {
@@ -88145,6 +88144,17 @@
                           "isInOtel": {
                             "type": "boolean",
                             "description": "Whether this Sentry convention is part of the OpenTelemetry semantic conventions. Present (and true) only for such conventions; OpenTelemetry attributes that aren't Sentry conventions are never marked"
+                          },
+                          "unit": {
+                            "enum": [
+                              "byte",
+                              "currency",
+                              "millisecond",
+                              "percentage",
+                              "second"
+                            ],
+                            "type": "string",
+                            "description": "Unit of a number attribute, from the dataset's Sentry-defined attributes or from Sentry conventions, which apply in every dataset"
                           }
                         }
                       }
@@ -217570,6 +217580,7 @@
                 "required": [
                   "detectionType"
                 ],
+                "additionalProperties": false,
                 "properties": {
                   "comparisonDelta": {
                     "type": "integer",
@@ -217579,10 +217590,8 @@
                       3600,
                       86400,
                       604800,
-                      2592000,
-                      null
+                      2592000
                     ],
-                    "nullable": true,
                     "description": "For percent detection, how far back the compared window is, in seconds"
                   },
                   "detectionType": {
@@ -218159,10 +218168,8 @@
                           3600,
                           86400,
                           604800,
-                          2592000,
-                          null
-                        ],
-                        "nullable": true
+                          2592000
+                        ]
                       },
                       "detectionType": {
                         "type": "string",
@@ -218171,6 +218178,7 @@
                         ]
                       }
                     },
+                    "additionalProperties": false,
                     "title": "Static Detection Config"
                   },
                   {
@@ -218188,10 +218196,8 @@
                           3600,
                           86400,
                           604800,
-                          2592000,
-                          null
-                        ],
-                        "nullable": true
+                          2592000
+                        ]
                       },
                       "detectionType": {
                         "type": "string",
@@ -218200,6 +218206,7 @@
                         ]
                       }
                     },
+                    "additionalProperties": false,
                     "title": "Percent Detection Config"
                   },
                   {
@@ -218217,10 +218224,8 @@
                           3600,
                           86400,
                           604800,
-                          2592000,
-                          null
-                        ],
-                        "nullable": true
+                          2592000
+                        ]
                       },
                       "detectionType": {
                         "type": "string",
@@ -218229,6 +218234,7 @@
                         ]
                       }
                     },
+                    "additionalProperties": false,
                     "title": "Dynamic Detection Config"
                   }
                 ],
@@ -219935,10 +219941,8 @@
                           3600,
                           86400,
                           604800,
-                          2592000,
-                          null
-                        ],
-                        "nullable": true
+                          2592000
+                        ]
                       },
                       "detectionType": {
                         "type": "string",
@@ -219947,6 +219951,7 @@
                         ]
                       }
                     },
+                    "additionalProperties": false,
                     "title": "Static Detection Config"
                   },
                   {
@@ -219964,10 +219969,8 @@
                           3600,
                           86400,
                           604800,
-                          2592000,
-                          null
-                        ],
-                        "nullable": true
+                          2592000
+                        ]
                       },
                       "detectionType": {
                         "type": "string",
@@ -219976,6 +219979,7 @@
                         ]
                       }
                     },
+                    "additionalProperties": false,
                     "title": "Percent Detection Config"
                   },
                   {
@@ -219993,10 +219997,8 @@
                           3600,
                           86400,
                           604800,
-                          2592000,
-                          null
-                        ],
-                        "nullable": true
+                          2592000
+                        ]
                       },
                       "detectionType": {
                         "type": "string",
@@ -220005,6 +220007,7 @@
                         ]
                       }
                     },
+                    "additionalProperties": false,
                     "title": "Dynamic Detection Config"
                   }
                 ],
@@ -268960,6 +268963,7 @@
                   "required": [
                     "detectionType"
                   ],
+                  "additionalProperties": false,
                   "properties": {
                     "comparisonDelta": {
                       "type": "integer",
@@ -268969,10 +268973,8 @@
                         3600,
                         86400,
                         604800,
-                        2592000,
-                        null
+                        2592000
                       ],
-                      "nullable": true,
                       "description": "For percent detection, how far back the compared window is, in seconds"
                     },
                     "detectionType": {
@@ -280284,6 +280286,17 @@
                 "isInOtel": {
                   "type": "boolean",
                   "description": "Whether this Sentry convention is part of the OpenTelemetry semantic conventions. Present (and true) only for such conventions; OpenTelemetry attributes that aren't Sentry conventions are never marked"
+                },
+                "unit": {
+                  "enum": [
+                    "byte",
+                    "currency",
+                    "millisecond",
+                    "percentage",
+                    "second"
+                  ],
+                  "type": "string",
+                  "description": "Unit of a number attribute, from the dataset's Sentry-defined attributes or from Sentry conventions, which apply in every dataset"
                 }
               }
             }
@@ -290202,7 +290215,8 @@
             },
             "sessionCount": {
               "type": "integer",
-              "description": "Number of sessions in the issue's project over the query time range. Only included when requested with expand=sessions"
+              "nullable": true,
+              "description": "Number of sessions in the issue's project over the query time range. Null when session data is unavailable. Only included with expand=sessions when a stats period is enabled and stats is not collapsed"
             },
             "inbox": {
               "type": "object",
